@@ -22,6 +22,8 @@ public class MainViewModel : INotifyPropertyChanged
     // Tab data collections
     private ModelOverview? _modelOverview;
     private ObservableCollection<MeasureInfo> _measures = [];
+    private ObservableCollection<MeasureInfo> _filteredMeasures = [];
+    private string _measuresSearchText = string.Empty;
     private ObservableCollection<ColumnInfo> _columns = [];
     private ObservableCollection<RelationshipInfo> _relationships = [];
     private ObservableCollection<DependencyInfo> _dependencies = [];
@@ -106,7 +108,55 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _measures = value;
                 OnPropertyChanged();
+                ApplyMeasuresFilter();
             }
+        }
+    }
+
+    public ObservableCollection<MeasureInfo> FilteredMeasures
+    {
+        get => _filteredMeasures;
+        set
+        {
+            if (_filteredMeasures != value)
+            {
+                _filteredMeasures = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string MeasuresSearchText
+    {
+        get => _measuresSearchText;
+        set
+        {
+            if (_measuresSearchText != value)
+            {
+                _measuresSearchText = value;
+                OnPropertyChanged();
+                ApplyMeasuresFilter();
+            }
+        }
+    }
+
+    private void ApplyMeasuresFilter()
+    {
+        if (string.IsNullOrWhiteSpace(MeasuresSearchText))
+        {
+            FilteredMeasures = new ObservableCollection<MeasureInfo>(Measures);
+        }
+        else
+        {
+            var searchLower = MeasuresSearchText.ToLowerInvariant();
+            var filtered = Measures.Where(m =>
+                m.Name.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                m.Table.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                (m.Expression?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (m.Description?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+
+            FilteredMeasures = new ObservableCollection<MeasureInfo>(filtered);
         }
     }
 
@@ -176,11 +226,13 @@ public class MainViewModel : INotifyPropertyChanged
     }
 
     public ICommand ConnectCommand { get; }
+    public ICommand ClearMeasuresSearchCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
         _powerBIService = powerBIService;
         ConnectCommand = new RelayCommand(async () => await ConnectAsync(), () => !IsConnecting);
+        ClearMeasuresSearchCommand = new RelayCommand(async () => await Task.Run(() => MeasuresSearchText = string.Empty), () => true);
     }
 
     private async Task ConnectAsync()
