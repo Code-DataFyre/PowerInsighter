@@ -5,9 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PowerInsighter"
         mc:Ignorable="d"
-        Title="PowerInsighter" 
-        Height="450" 
-        Width="800">
+        Title="PowerInsighter - Power BI Model Analyzer" 
+        Height="700" 
+        Width="1200"
+        WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,40 +16,333 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Button
-            Height="40"
-            Content="Connect to Power BI Desktop"
-            Command="{Binding ConnectCommand}" />
+        <!-- Header with Connect Button -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button
+                Grid.Column="0"
+                Width="220"
+                Height="40"
+                Content="🔌 Connect to Power BI Desktop"
+                Command="{Binding ConnectCommand}"
+                FontSize="14"
+                FontWeight="SemiBold"/>
+            
+            <TextBlock 
+                Grid.Column="1" 
+                Text="PowerInsighter" 
+                FontSize="24" 
+                FontWeight="Bold" 
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Foreground="#0078D4"/>
+        </Grid>
 
-        <Label
-            Grid.Row="1"
-            Margin="0,5"
-            Content="{Binding StatusMessage}" />
+        <!-- Status Bar -->
+        <Border Grid.Row="1" 
+                Background="#F0F0F0" 
+                CornerRadius="4" 
+                Padding="10,8"
+                Margin="0,10,0,10">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       FontSize="13"/>
+        </Border>
 
-        <DataGrid
-            Grid.Row="2"
-            ItemsSource="{Binding Metadata}"
-            AlternatingRowBackground="#F2F2F2"
-            AutoGenerateColumns="False"
-            IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn
-                    Width="150"
-                    Binding="{Binding Name}"
-                    Header="Object Name" />
-                <DataGridTextColumn
-                    Width="80"
-                    Binding="{Binding Type}"
-                    Header="Type" />
-                <DataGridTextColumn
-                    Width="120"
-                    Binding="{Binding Parent}"
-                    Header="Parent Table" />
-                <DataGridTextColumn
-                    Width="*"
-                    Binding="{Binding Details}"
-                    Header="Metadata Details / Expression" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Main Content Area with Tabs -->
+        <TabControl Grid.Row="2" 
+                    Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisibilityConverter}}">
+            
+            <!-- Model Overview Tab -->
+            <TabItem Header="📊 Model Overview">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <TextBlock Text="Model Overview" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                        
+                        <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <!-- Row 1 -->
+                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="10">
+                                    <TextBlock Text="Tables" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.TableCount}" FontSize="28" FontWeight="Bold" Foreground="#0078D4"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Grid.Row="0" Margin="10">
+                                    <TextBlock Text="Measures" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.MeasureCount}" FontSize="28" FontWeight="Bold" Foreground="#107C10"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="10">
+                                    <TextBlock Text="Columns" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.ColumnCount}" FontSize="28" FontWeight="Bold" Foreground="#5C2D91"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Grid.Row="0" Margin="10">
+                                    <TextBlock Text="Relationships" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.RelationshipCount}" FontSize="28" FontWeight="Bold" Foreground="#E81123"/>
+                                </StackPanel>
+                                
+                                <!-- Row 2 -->
+                                <StackPanel Grid.Column="0" Grid.Row="1" Margin="10">
+                                    <TextBlock Text="Calculated Columns" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.CalculatedColumnCount}" FontSize="28" FontWeight="Bold" Foreground="#FF8C00"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Grid.Row="1" Margin="10">
+                                    <TextBlock Text="Calculated Tables" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.CalculatedTableCount}" FontSize="28" FontWeight="Bold" Foreground="#008080"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Grid.Row="1" Margin="10">
+                                    <TextBlock Text="Compatibility Level" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="28" FontWeight="Bold" Foreground="#666666"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Grid.Row="1" Margin="10">
+                                    <TextBlock Text="Last Refresh" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.LastRefresh, StringFormat='{}{0:g}'}" FontSize="16" FontWeight="SemiBold" Foreground="#666666"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <TextBlock Text="Model Name" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,5"/>
+                        <TextBlock Text="{Binding ModelOverview.ModelName}" FontSize="16" Foreground="#333"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            
+            <!-- Measures Tab -->
+            <TabItem Header="📐 Measures">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Measures" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Measures}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#F8F8F8"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
+                            <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="120"/>
+                            <DataGridTextColumn Header="Expression" Binding="{Binding Expression}" Width="*"/>
+                            <DataGridTextColumn Header="Format" Binding="{Binding FormatString}" Width="100"/>
+                            <DataGridCheckBoxColumn Header="Hidden" Binding="{Binding IsHidden}" Width="60"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            
+            <!-- Columns Tab -->
+            <TabItem Header="📋 Columns">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Columns" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Columns}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#F8F8F8"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
+                            <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="120"/>
+                            <DataGridTextColumn Header="Data Type" Binding="{Binding DataType}" Width="100"/>
+                            <DataGridCheckBoxColumn Header="Calculated" Binding="{Binding IsCalculated}" Width="80"/>
+                            <DataGridTextColumn Header="Expression" Binding="{Binding Expression}" Width="*"/>
+                            <DataGridCheckBoxColumn Header="Hidden" Binding="{Binding IsHidden}" Width="60"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            
+            <!-- Relationships Tab -->
+            <TabItem Header="🔗 Relationships">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Relationships" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Relationships}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#F8F8F8"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="From Table" Binding="{Binding FromTable}" Width="120"/>
+                            <DataGridTextColumn Header="From Column" Binding="{Binding FromColumn}" Width="120"/>
+                            <DataGridTextColumn Header="To Table" Binding="{Binding ToTable}" Width="120"/>
+                            <DataGridTextColumn Header="To Column" Binding="{Binding ToColumn}" Width="120"/>
+                            <DataGridTextColumn Header="Cardinality" Binding="{Binding Cardinality}" Width="120"/>
+                            <DataGridTextColumn Header="Cross Filter" Binding="{Binding CrossFilterDirection}" Width="100"/>
+                            <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="60"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            
+            <!-- Dependencies Tab -->
+            <TabItem Header="🔄 Dependencies">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Dependencies" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Dependencies}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#F8F8F8"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Object Name" Binding="{Binding ObjectName}" Width="150"/>
+                            <DataGridTextColumn Header="Object Type" Binding="{Binding ObjectType}" Width="120"/>
+                            <DataGridTextColumn Header="Depends On" Binding="{Binding DependsOn}" Width="*"/>
+                            <DataGridTextColumn Header="Dependency Type" Binding="{Binding DependencyType}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            
+            <!-- Unused Objects Tab -->
+            <TabItem Header="⚠️ Unused Objects">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="Unused Objects" FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="Objects that may be candidates for removal to optimize your model" Foreground="Gray" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding UnusedObjects}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#FFF8E7"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="180"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding ObjectType}" Width="120"/>
+                            <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="120"/>
+                            <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+            
+            <!-- Impact Analysis Tab -->
+            <TabItem Header="💥 Impact Analysis">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="Impact Analysis" FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="Understand the downstream impact of changes to your model objects" Foreground="Gray" FontSize="12"/>
+                    </StackPanel>
+                    
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding ImpactAnalysis}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              AlternatingRowBackground="#F8F8F8"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Object Name" Binding="{Binding ObjectName}" Width="150"/>
+                            <DataGridTextColumn Header="Object Type" Binding="{Binding ObjectType}" Width="100"/>
+                            <DataGridTextColumn Header="Impacted Object" Binding="{Binding ImpactedObject}" Width="150"/>
+                            <DataGridTextColumn Header="Impact Type" Binding="{Binding ImpactType}" Width="150"/>
+                            <DataGridTemplateColumn Header="Severity" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="5,2" CornerRadius="3" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Critical">
+                                                            <Setter Property="Background" Value="#FFE0E0"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="High">
+                                                            <Setter Property="Background" Value="#FFE8CC"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Medium">
+                                                            <Setter Property="Background" Value="#FFF8CC"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Low">
+                                                            <Setter Property="Background" Value="#E0FFE0"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Severity}" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        
+        <!-- Welcome Message when not connected -->
+        <Border Grid.Row="2" 
+                Visibility="{Binding IsConnected, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                Background="#F5F5F5"
+                CornerRadius="8"
+                Padding="40">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🔌" FontSize="64" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                <TextBlock Text="Welcome to PowerInsighter" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="Connect to a Power BI Desktop instance to analyze your data model" 
+                           FontSize="14" Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+                <TextBlock Text="Features:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <StackPanel Margin="20,0,0,0">
+                    <TextBlock Text="📊 Model Overview - Get a quick summary of your model" Margin="0,5"/>
+                    <TextBlock Text="📐 Measures - View all measures and their expressions" Margin="0,5"/>
+                    <TextBlock Text="📋 Columns - Explore columns and calculated columns" Margin="0,5"/>
+                    <TextBlock Text="🔗 Relationships - Analyze table relationships" Margin="0,5"/>
+                    <TextBlock Text="🔄 Dependencies - Understand object dependencies" Margin="0,5"/>
+                    <TextBlock Text="⚠️ Unused Objects - Find optimization opportunities" Margin="0,5"/>
+                    <TextBlock Text="💥 Impact Analysis - Assess change impacts" Margin="0,5"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
