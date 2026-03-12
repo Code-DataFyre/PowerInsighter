@@ -1,0 +1,54 @@
+﻿<Window x:Class="PowerInsighter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PowerInsighter"
+        mc:Ignorable="d"
+        Title="PowerInsighter" 
+        Height="450" 
+        Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Button
+            Height="40"
+            Content="Connect to Power BI Desktop"
+            Command="{Binding ConnectCommand}" />
+
+        <Label
+            Grid.Row="1"
+            Margin="0,5"
+            Content="{Binding StatusMessage}" />
+
+        <DataGrid
+            Grid.Row="2"
+            ItemsSource="{Binding Metadata}"
+            AlternatingRowBackground="#F2F2F2"
+            AutoGenerateColumns="False"
+            IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Width="150"
+                    Binding="{Binding Name}"
+                    Header="Object Name" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Type}"
+                    Header="Type" />
+                <DataGridTextColumn
+                    Width="120"
+                    Binding="{Binding Parent}"
+                    Header="Parent Table" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding Details}"
+                    Header="Metadata Details / Expression" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
