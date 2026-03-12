@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using PowerInsighter.Models;
 using PowerInsighter.Services;
+using PowerInsighter.Views;
 
 namespace PowerInsighter.ViewModels;
 
@@ -75,63 +76,26 @@ public class MainViewModel : INotifyPropertyChanged
 
         try
         {
-            IsConnecting = true;
-            StatusMessage = "Searching for Power BI instance...";
+            StatusMessage = "Opening connection dialog...";
 
-            if (!_powerBIService.IsPowerBIRunning())
+            // Create the dialog first, then create the ViewModel with the dialog reference
+            var dialog = new ConnectionDialog(_powerBIService)
             {
-                MessageBox.Show(
-                    "Power BI Desktop is not running.\n\n" +
-                    "Please start Power BI Desktop and open a .pbix file first.",
-                    "Power BI Not Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                StatusMessage = "Power BI Desktop not running.";
-                return;
-            }
+                Owner = Application.Current.MainWindow
+            };
 
-            StatusMessage = "Scanning for Power BI ports...";
-            var ports = await _powerBIService.FindPowerBIPortsAsync(cancellationToken);
+            var result = dialog.ShowDialog();
 
-            if (ports.Count == 0)
+            if (result == true && dialog.SelectedInstance != null)
             {
-                MessageBox.Show(
-                    "Could not find any Power BI Analysis Services instances.\n\n" +
-                    "Make sure:\n" +
-                    "1. A .pbix file is OPEN in Power BI Desktop\n" +
-                    "2. The data model has loaded (check if you see tables in Fields pane)\n" +
-                    "3. Wait 10-15 seconds after opening the file",
-                    "No Instances Found",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                StatusMessage = "No Power BI instance found.";
-                return;
+                var selectedInstance = dialog.SelectedInstance;
+                IsConnecting = true;
+                await ConnectToInstanceAsync(selectedInstance, cancellationToken);
             }
-
-            // Try connecting to each port
-            foreach (var port in ports)
+            else
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                StatusMessage = $"Trying port {port}...";
-                
-                try
-                {
-                    await ConnectAndLoadMetadataAsync(port, cancellationToken);
-                    return; // Success!
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Failed to connect to port {port}: {ex.Message}");
-                }
+                StatusMessage = "Connection cancelled.";
             }
-
-            MessageBox.Show(
-                "Found ports but couldn't connect to any.\n\n" +
-                $"Ports tried: {string.Join(", ", ports)}",
-                "Connection Failed",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            StatusMessage = "Connection failed.";
         }
         catch (OperationCanceledException)
         {
@@ -153,14 +117,28 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private async Task ConnectAndLoadMetadataAsync(int port, CancellationToken cancellationToken)
+    private async Task ConnectToInstanceAsync(PowerBIInstance instance, CancellationToken cancellationToken)
     {
-        StatusMessage = $"Connecting to port {port}...";
-        
-        var metadataList = await _powerBIService.LoadMetadataAsync(port, cancellationToken);
+        StatusMessage = $"Connecting to {instance.DisplayName}...";
 
-        Metadata = new ObservableCollection<ModelMetadata>(metadataList);
-        StatusMessage = $"? Connected to port {port}! Loaded {metadataList.Count} items";
+        try
+        {
+            var metadataList = await _powerBIService.LoadMetadataAsync(instance.Port, cancellationToken);
+
+            Metadata = new ObservableCollection<ModelMetadata>(metadataList);
+            StatusMessage = $"? Connected to {instance.DisplayName}! Loaded {metadataList.Count} items";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Failed to connect to {instance.DisplayName}.\n\nError: {ex.Message}",
+                "Connection Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            StatusMessage = $"Failed to connect to {instance.DisplayName}.";
+            Debug.WriteLine($"Connection error: {ex}");
+            throw;
+        }
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

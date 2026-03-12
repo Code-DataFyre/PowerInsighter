@@ -30,32 +30,76 @@ public class PowerBIService : IPowerBIService
         }
     }
 
+    public async Task<List<PowerBIInstance>> FindPowerBIInstancesAsync(CancellationToken cancellationToken = default)
+    {
+        var instances = new List<PowerBIInstance>();
+
+        return await Task.Run(() =>
+        {
+            var msmdsrvProcesses = Process.GetProcessesByName(AnalysisServicesProcessName);
+            Debug.WriteLine($"Found {msmdsrvProcesses.Length} msmdsrv.exe process(es)");
+
+            foreach (var process in msmdsrvProcesses)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    var parentId = GetParentProcessId(process.Id);
+                    if (parentId > 0)
+                    {
+                        using var parentProcess = Process.GetProcessById(parentId);
+                        if (parentProcess.ProcessName.Equals(PowerBIProcessName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Debug.WriteLine($"Found Power BI's msmdsrv.exe (PID: {process.Id})");
+
+                            var port = FindPortForProcess(process.Id);
+                            if (port > 0)
+                            {
+                                var instance = new PowerBIInstance
+                                {
+                                    Port = port,
+                                    ProcessId = parentId,
+                                    WindowTitle = GetProcessWindowTitle(parentProcess),
+                                    FileName = GetPowerBIFileName(parentProcess)
+                                };
+
+                                instances.Add(instance);
+                                Debug.WriteLine($"? Created instance: {instance.DisplayName}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error checking process: {ex.Message}");
+                }
+            }
+
+            // Fallback: Try reading port files
+            if (instances.Count == 0)
+            {
+                Debug.WriteLine("Fallback: Trying port file method...");
+                var portsFromFiles = GetPowerBIPortsFromFiles();
+                foreach (var port in portsFromFiles)
+                {
+                    instances.Add(new PowerBIInstance
+                    {
+                        Port = port,
+                        ProcessId = 0,
+                        FileName = "Unknown (from port file)"
+                    });
+                }
+            }
+
+            return instances;
+        }, cancellationToken);
+    }
+
     public async Task<List<int>> FindPowerBIPortsAsync(CancellationToken cancellationToken = default)
     {
-        var foundPorts = new List<int>();
-
-        // Method 1: Find msmdsrv.exe processes and their ports
-        foundPorts.AddRange(await FindPortsFromProcessesAsync(cancellationToken));
-
-        // Method 2: Try reading port files as fallback
-        if (foundPorts.Count == 0)
-        {
-            Debug.WriteLine("Fallback: Trying port file method...");
-            var portFromFile = GetPowerBIPortFromFile();
-            if (portFromFile > 0)
-            {
-                foundPorts.Add(portFromFile);
-            }
-        }
-
-        // Method 3: Scan common Power BI port range as last resort
-        if (foundPorts.Count == 0)
-        {
-            Debug.WriteLine("Last resort: Scanning common port range...");
-            foundPorts.AddRange(await ScanCommonPortsAsync(cancellationToken));
-        }
-
-        return foundPorts;
+        var instances = await FindPowerBIInstancesAsync(cancellationToken);
+        return instances.Select(i => i.Port).ToList();
     }
 
     public async Task<List<ModelMetadata>> LoadMetadataAsync(int port, CancellationToken cancellationToken = default)
@@ -114,48 +158,6 @@ public class PowerBIService : IPowerBIService
         }, cancellationToken);
 
         return metadataList;
-    }
-
-    private async Task<List<int>> FindPortsFromProcessesAsync(CancellationToken cancellationToken)
-    {
-        var foundPorts = new List<int>();
-
-        return await Task.Run(() =>
-        {
-            var msmdsrvProcesses = Process.GetProcessesByName(AnalysisServicesProcessName);
-            Debug.WriteLine($"Found {msmdsrvProcesses.Length} msmdsrv.exe process(es)");
-
-            foreach (var process in msmdsrvProcesses)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                try
-                {
-                    var parentId = GetParentProcessId(process.Id);
-                    if (parentId > 0)
-                    {
-                        using var parentProcess = Process.GetProcessById(parentId);
-                        if (parentProcess.ProcessName.Equals(PowerBIProcessName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            Debug.WriteLine($"Found Power BI's msmdsrv.exe (PID: {process.Id})");
-
-                            var port = FindPortForProcess(process.Id);
-                            if (port > 0 && !foundPorts.Contains(port))
-                            {
-                                foundPorts.Add(port);
-                                Debug.WriteLine($"? Detected port: {port}");
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Error checking process: {ex.Message}");
-                }
-            }
-
-            return foundPorts;
-        }, cancellationToken);
     }
 
     private static int GetParentProcessId(int processId)
@@ -223,15 +225,53 @@ public class PowerBIService : IPowerBIService
         return 0;
     }
 
-    private static int GetPowerBIPortFromFile()
+    private static string? GetProcessWindowTitle(Process process)
     {
+        try
+        {
+            return !string.IsNullOrEmpty(process.MainWindowTitle) ? process.MainWindowTitle : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? GetPowerBIFileName(Process process)
+    {
+        try
+        {
+            var windowTitle = process.MainWindowTitle;
+            if (string.IsNullOrEmpty(windowTitle))
+                return null;
+
+            // Power BI Desktop window title format: "filename - Power BI Desktop"
+            var parts = windowTitle.Split(new[] { " - Power BI Desktop" }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 0)
+            {
+                var fileName = parts[0].Trim();
+                // Remove asterisk if file is modified
+                return fileName.TrimStart('*').Trim();
+            }
+
+            return windowTitle;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static List<int> GetPowerBIPortsFromFiles()
+    {
+        var ports = new List<int>();
         try
         {
             var basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var workspacePath = Path.Combine(basePath, "Microsoft", "Power BI Desktop", "AnalysisServicesWorkspaces");
 
             if (!Directory.Exists(workspacePath))
-                return 0;
+                return ports;
 
             var workspaceFolders = Directory.GetDirectories(workspacePath)
                 .OrderByDescending(f => new DirectoryInfo(f).LastWriteTime);
@@ -243,7 +283,7 @@ public class PowerBIService : IPowerBIService
                 {
                     var content = File.ReadAllText(portFile, System.Text.Encoding.Unicode).Trim();
                     if (int.TryParse(content, out int port))
-                        return port;
+                        ports.Add(port);
                 }
             }
         }
@@ -251,52 +291,6 @@ public class PowerBIService : IPowerBIService
         {
             // Swallow exception as this is a fallback mechanism
         }
-        return 0;
-    }
-
-    private async Task<List<int>> ScanCommonPortsAsync(CancellationToken cancellationToken)
-    {
-        var foundPorts = new List<int>();
-
-        var portsToScan = Enumerable.Range(PortScanStartRange, PortScanCount)
-            .Where(p => p % PortScanInterval == 0)
-            .ToList();
-
-        Debug.WriteLine($"Scanning {portsToScan.Count} common ports...");
-
-        foreach (var port in portsToScan)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (await IsPortListeningAsync(port, cancellationToken))
-            {
-                Debug.WriteLine($"Found listening port: {port}");
-                foundPorts.Add(port);
-                if (foundPorts.Count >= MaxScannedPorts)
-                    break;
-            }
-        }
-
-        return foundPorts;
-    }
-
-    private static async Task<bool> IsPortListeningAsync(int port, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var client = new TcpClient();
-            var connectTask = client.ConnectAsync("localhost", port);
-            var completedTask = await Task.WhenAny(connectTask, Task.Delay(PortCheckTimeoutMs, cancellationToken));
-
-            if (completedTask == connectTask && !connectTask.IsFaulted)
-            {
-                return true;
-            }
-        }
-        catch
-        {
-            // Port is not listening or connection failed
-        }
-        return false;
+        return ports;
     }
 }

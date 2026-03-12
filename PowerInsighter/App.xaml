@@ -1,8 +1,11 @@
 ﻿<Application x:Class="PowerInsighter.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:PowerInsighter">
+             xmlns:local="clr-namespace:PowerInsighter"
+             xmlns:converters="clr-namespace:PowerInsighter.Converters">
     <Application.Resources>
-         
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
     </Application.Resources>
 </Application>
