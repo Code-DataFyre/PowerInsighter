@@ -30,6 +30,17 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<UnusedObjectInfo> _unusedObjects = [];
     private ObservableCollection<ImpactAnalysisInfo> _impactAnalysis = [];
 
+    // Measures column visibility settings
+    private bool _isColumnSettingsOpen;
+    private bool _showNameColumn = true;
+    private bool _showTableColumn = true;
+    private bool _showExpressionColumn = true;
+    private bool _showDescriptionColumn = true;
+    private bool _showFormatStringColumn = true;
+    private bool _showIsHiddenColumn = true;
+    private bool _showDisplayFolderColumn = true;
+    private bool _showDataTypeColumn = true;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public bool IsConnecting
@@ -225,14 +236,134 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // Measures Column Visibility Properties
+    public bool IsColumnSettingsOpen
+    {
+        get => _isColumnSettingsOpen;
+        set
+        {
+            if (_isColumnSettingsOpen != value)
+            {
+                _isColumnSettingsOpen = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowNameColumn
+    {
+        get => _showNameColumn;
+        set
+        {
+            if (_showNameColumn != value)
+            {
+                _showNameColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowTableColumn
+    {
+        get => _showTableColumn;
+        set
+        {
+            if (_showTableColumn != value)
+            {
+                _showTableColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowExpressionColumn
+    {
+        get => _showExpressionColumn;
+        set
+        {
+            if (_showExpressionColumn != value)
+            {
+                _showExpressionColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowDescriptionColumn
+    {
+        get => _showDescriptionColumn;
+        set
+        {
+            if (_showDescriptionColumn != value)
+            {
+                _showDescriptionColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowFormatStringColumn
+    {
+        get => _showFormatStringColumn;
+        set
+        {
+            if (_showFormatStringColumn != value)
+            {
+                _showFormatStringColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowIsHiddenColumn
+    {
+        get => _showIsHiddenColumn;
+        set
+        {
+            if (_showIsHiddenColumn != value)
+            {
+                _showIsHiddenColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowDisplayFolderColumn
+    {
+        get => _showDisplayFolderColumn;
+        set
+        {
+            if (_showDisplayFolderColumn != value)
+            {
+                _showDisplayFolderColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowDataTypeColumn
+    {
+        get => _showDataTypeColumn;
+        set
+        {
+            if (_showDataTypeColumn != value)
+            {
+                _showDataTypeColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public ICommand ConnectCommand { get; }
     public ICommand ClearMeasuresSearchCommand { get; }
+    public ICommand ToggleColumnSettingsCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
         _powerBIService = powerBIService;
         ConnectCommand = new RelayCommand(async () => await ConnectAsync(), () => !IsConnecting);
         ClearMeasuresSearchCommand = new RelayCommand(async () => await Task.Run(() => MeasuresSearchText = string.Empty), () => true);
+        ToggleColumnSettingsCommand = new RelayCommand(async () => await Task.Run(() => IsColumnSettingsOpen = !IsColumnSettingsOpen), () => true);
     }
 
     private async Task ConnectAsync()
@@ -332,15 +463,15 @@ public class MainViewModel : INotifyPropertyChanged
         // Measures
         Measures = new ObservableCollection<MeasureInfo>
         {
-            new() { Name = "Total Sales", Table = "Sales", Expression = "SUM(Sales[Amount])", Description = "Sum of all sales amounts", FormatString = "$#,##0.00", IsHidden = false },
-            new() { Name = "Total Cost", Table = "Sales", Expression = "SUM(Sales[Cost])", Description = "Sum of all costs", FormatString = "$#,##0.00", IsHidden = false },
-            new() { Name = "Profit Margin", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Total Cost], [Total Sales])", Description = "Profit margin percentage", FormatString = "0.00%", IsHidden = false },
-            new() { Name = "YTD Sales", Table = "Sales", Expression = "TOTALYTD([Total Sales], 'Date'[Date])", Description = "Year to date sales", FormatString = "$#,##0.00", IsHidden = false },
-            new() { Name = "Previous Year Sales", Table = "Sales", Expression = "CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))", Description = "Sales from previous year", FormatString = "$#,##0.00", IsHidden = false },
-            new() { Name = "Sales Growth %", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Previous Year Sales], [Previous Year Sales])", Description = "Year over year sales growth", FormatString = "0.00%", IsHidden = false },
-            new() { Name = "Customer Count", Table = "Customers", Expression = "DISTINCTCOUNT(Sales[CustomerID])", Description = "Count of unique customers", FormatString = "#,##0", IsHidden = false },
-            new() { Name = "Average Order Value", Table = "Sales", Expression = "DIVIDE([Total Sales], COUNTROWS(Sales))", Description = "Average value per order", FormatString = "$#,##0.00", IsHidden = false },
-            new() { Name = "_Helper Measure", Table = "Calculations", Expression = "1", Description = "Internal helper measure", FormatString = "", IsHidden = true },
+            new() { Name = "Total Sales", Table = "Sales", Expression = "SUM(Sales[Amount])", Description = "Sum of all sales amounts", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double" },
+            new() { Name = "Total Cost", Table = "Sales", Expression = "SUM(Sales[Cost])", Description = "Sum of all costs", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Costs", DataType = "Double" },
+            new() { Name = "Profit Margin", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Total Cost], [Total Sales])", Description = "Profit margin percentage", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double" },
+            new() { Name = "YTD Sales", Table = "Sales", Expression = "TOTALYTD([Total Sales], 'Date'[Date])", Description = "Year to date sales", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double" },
+            new() { Name = "Previous Year Sales", Table = "Sales", Expression = "CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))", Description = "Sales from previous year", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double" },
+            new() { Name = "Sales Growth %", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Previous Year Sales], [Previous Year Sales])", Description = "Year over year sales growth", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double" },
+            new() { Name = "Customer Count", Table = "Customers", Expression = "DISTINCTCOUNT(Sales[CustomerID])", Description = "Count of unique customers", FormatString = "#,##0", IsHidden = false, DisplayFolder = "Customers", DataType = "Int64" },
+            new() { Name = "Average Order Value", Table = "Sales", Expression = "DIVIDE([Total Sales], COUNTROWS(Sales))", Description = "Average value per order", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double" },
+            new() { Name = "_Helper Measure", Table = "Calculations", Expression = "1", Description = "Internal helper measure", FormatString = "", IsHidden = true, DisplayFolder = "_Internal", DataType = "Int64" },
         };
 
         // Columns

@@ -8,4 +8,6 @@ public class MeasureInfo
     public string? Description { get; init; }
     public string? FormatString { get; init; }
     public bool IsHidden { get; init; }
+    public string? DisplayFolder { get; init; }
+    public string? DataType { get; init; }
 }

@@ -148,7 +148,7 @@
                         </StackPanel>
                     </Grid>
                     
-                    <!-- Search Bar -->
+                    <!-- Search Bar with Settings -->
                     <Border Grid.Row="1" 
                             Background="White" 
                             BorderBrush="#E0E0E0" 
@@ -160,6 +160,7 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
@@ -217,6 +218,101 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
+                            
+                            <!-- Settings Button with Popup -->
+                            <ToggleButton Grid.Column="3" 
+                                          IsChecked="{Binding IsColumnSettingsOpen, Mode=TwoWay}"
+                                          Background="Transparent" 
+                                          BorderThickness="0"
+                                          Cursor="Hand"
+                                          Padding="8,4"
+                                          VerticalAlignment="Center"
+                                          ToolTip="Column Settings">
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Border Background="{TemplateBinding Background}" 
+                                                            Padding="{TemplateBinding Padding}"
+                                                            CornerRadius="4">
+                                                        <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Background" Value="#E8F4FD"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
+                            
+                            <!-- Column Settings Popup -->
+                            <Popup Grid.Column="3"
+                                   IsOpen="{Binding IsColumnSettingsOpen, Mode=TwoWay}"
+                                   PlacementTarget="{Binding ElementName=SettingsButton}"
+                                   Placement="Bottom"
+                                   HorizontalOffset="-200"
+                                   VerticalOffset="5"
+                                   StaysOpen="False"
+                                   AllowsTransparency="True">
+                                <Border Background="White" 
+                                        BorderBrush="#E0E0E0" 
+                                        BorderThickness="1" 
+                                        CornerRadius="8"
+                                        Padding="15"
+                                        MinWidth="220">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2"/>
+                                    </Border.Effect>
+                                    <StackPanel>
+                                        <TextBlock Text="Visible Columns" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="14" 
+                                                   Margin="0,0,0,12"
+                                                   Foreground="#333"/>
+                                        
+                                        <CheckBox Content="Name" 
+                                                  IsChecked="{Binding ShowNameColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Table" 
+                                                  IsChecked="{Binding ShowTableColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Expression" 
+                                                  IsChecked="{Binding ShowExpressionColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Description" 
+                                                  IsChecked="{Binding ShowDescriptionColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Format String" 
+                                                  IsChecked="{Binding ShowFormatStringColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Visibility (Hidden)" 
+                                                  IsChecked="{Binding ShowIsHiddenColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Display Folder" 
+                                                  IsChecked="{Binding ShowDisplayFolderColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                        <CheckBox Content="Data Type" 
+                                                  IsChecked="{Binding ShowDataTypeColumn}" 
+                                                  Margin="0,4" 
+                                                  FontSize="13"/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
                         </Grid>
                     </Border>
                     
@@ -290,7 +386,10 @@
                             
                             <DataGrid.Columns>
                                 <!-- Name Column -->
-                                <DataGridTemplateColumn Header="NAME" Width="180" SortMemberPath="Name">
+                                <DataGridTemplateColumn Header="NAME" 
+                                                        Width="180" 
+                                                        SortMemberPath="Name"
+                                                        Visibility="{Binding DataContext.ShowNameColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -302,7 +401,10 @@
                                 </DataGridTemplateColumn>
                                 
                                 <!-- Table Column -->
-                                <DataGridTemplateColumn Header="TABLE" Width="130" SortMemberPath="Table">
+                                <DataGridTemplateColumn Header="TABLE" 
+                                                        Width="130" 
+                                                        SortMemberPath="Table"
+                                                        Visibility="{Binding DataContext.ShowTableColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="#F0F0F0" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
@@ -313,7 +415,10 @@
                                 </DataGridTemplateColumn>
                                 
                                 <!-- Expression Column -->
-                                <DataGridTemplateColumn Header="EXPRESSION" Width="*" SortMemberPath="Expression">
+                                <DataGridTemplateColumn Header="EXPRESSION" 
+                                                        Width="*" 
+                                                        SortMemberPath="Expression"
+                                                        Visibility="{Binding DataContext.ShowExpressionColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Expression}" 
@@ -326,8 +431,27 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
                                 
+                                <!-- Description Column -->
+                                <DataGridTemplateColumn Header="DESCRIPTION" 
+                                                        Width="180" 
+                                                        SortMemberPath="Description"
+                                                        Visibility="{Binding DataContext.ShowDescriptionColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Description}" 
+                                                       FontSize="12" 
+                                                       Foreground="#666"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Description}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
                                 <!-- Format Column -->
-                                <DataGridTemplateColumn Header="FORMAT" Width="100" SortMemberPath="FormatString">
+                                <DataGridTemplateColumn Header="FORMAT" 
+                                                        Width="100" 
+                                                        SortMemberPath="FormatString"
+                                                        Visibility="{Binding DataContext.ShowFormatStringColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding FormatString}" 
@@ -339,7 +463,9 @@
                                 </DataGridTemplateColumn>
                                 
                                 <!-- Hidden Column -->
-                                <DataGridTemplateColumn Header="VISIBILITY" Width="90">
+                                <DataGridTemplateColumn Header="VISIBILITY" 
+                                                        Width="90"
+                                                        Visibility="{Binding DataContext.ShowIsHiddenColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
@@ -367,6 +493,38 @@
                                                         </Style>
                                                     </TextBlock.Style>
                                                 </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Display Folder Column -->
+                                <DataGridTemplateColumn Header="FOLDER" 
+                                                        Width="120" 
+                                                        SortMemberPath="DisplayFolder"
+                                                        Visibility="{Binding DataContext.ShowDisplayFolderColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="📁" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayFolder}" 
+                                                           FontSize="12" 
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Data Type Column -->
+                                <DataGridTemplateColumn Header="DATA TYPE" 
+                                                        Width="90" 
+                                                        SortMemberPath="DataType"
+                                                        Visibility="{Binding DataContext.ShowDataTypeColumn, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="6,3" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding DataType}" FontSize="11" Foreground="#1565C0" FontWeight="SemiBold"/>
                                             </Border>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
