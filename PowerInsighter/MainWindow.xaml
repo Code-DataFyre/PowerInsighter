@@ -460,6 +460,138 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Style>
+                                
+                                <!-- Modern Slim ScrollBar Thumb Style -->
+                                <Style x:Key="SlimScrollBarThumb" TargetType="Thumb">
+                                    <Setter Property="OverridesDefaultStyle" Value="True"/>
+                                    <Setter Property="IsTabStop" Value="False"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="ThumbBorder"
+                                                        Background="#C0C0C0"
+                                                        CornerRadius="3"
+                                                        Margin="1"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#A0A0A0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#808080"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                                
+                                <!-- Modern Slim Vertical ScrollBar Style -->
+                                <Style x:Key="SlimVerticalScrollBar" TargetType="ScrollBar">
+                                    <Setter Property="Width" Value="8"/>
+                                    <Setter Property="MinWidth" Value="8"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ScrollBar">
+                                                <Grid x:Name="GridRoot" Background="{TemplateBinding Background}">
+                                                    <Border Background="#F5F5F5" CornerRadius="4" Margin="1">
+                                                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                            <Track.Thumb>
+                                                                <Thumb Style="{StaticResource SlimScrollBarThumb}"/>
+                                                            </Track.Thumb>
+                                                        </Track>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="GridRoot" Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                                
+                                <!-- Modern Slim Horizontal ScrollBar Style -->
+                                <Style x:Key="SlimHorizontalScrollBar" TargetType="ScrollBar">
+                                    <Setter Property="Height" Value="8"/>
+                                    <Setter Property="MinHeight" Value="8"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ScrollBar">
+                                                <Grid x:Name="GridRoot" Background="{TemplateBinding Background}">
+                                                    <Border Background="#F5F5F5" CornerRadius="4" Margin="1">
+                                                        <Track x:Name="PART_Track">
+                                                            <Track.Thumb>
+                                                                <Thumb Style="{StaticResource SlimScrollBarThumb}"/>
+                                                            </Track.Thumb>
+                                                        </Track>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="GridRoot" Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                                
+                                <!-- Apply ScrollBar styles to ScrollViewer -->
+                                <Style TargetType="ScrollBar">
+                                    <Style.Triggers>
+                                        <Trigger Property="Orientation" Value="Vertical">
+                                            <Setter Property="Width" Value="8"/>
+                                            <Setter Property="MinWidth" Value="8"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ScrollBar">
+                                                        <Grid x:Name="GridRoot" Background="Transparent">
+                                                            <Border Background="#F5F5F5" CornerRadius="4" Margin="1">
+                                                                <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                                    <Track.Thumb>
+                                                                        <Thumb Style="{StaticResource SlimScrollBarThumb}"/>
+                                                                    </Track.Thumb>
+                                                                </Track>
+                                                            </Border>
+                                                        </Grid>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="GridRoot" Property="Background" Value="#F0F0F0"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <Trigger Property="Orientation" Value="Horizontal">
+                                            <Setter Property="Height" Value="8"/>
+                                            <Setter Property="MinHeight" Value="8"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ScrollBar">
+                                                        <Grid x:Name="GridRoot" Background="Transparent">
+                                                            <Border Background="#F5F5F5" CornerRadius="4" Margin="1">
+                                                                <Track x:Name="PART_Track">
+                                                                    <Track.Thumb>
+                                                                        <Thumb Style="{StaticResource SlimScrollBarThumb}"/>
+                                                                    </Track.Thumb>
+                                                                </Track>
+                                                            </Border>
+                                                        </Grid>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="GridRoot" Property="Background" Value="#F0F0F0"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
                             </DataGrid.Resources>
                             
                             <DataGrid.Columns>
