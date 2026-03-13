@@ -51,7 +51,14 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _showLineageTagColumn = false;
     private bool _showModifiedTimeColumn = false;
 
+    // DAX Viewer properties
+    private bool _isDaxViewerOpen;
+    private string _selectedDaxExpression = string.Empty;
+    private string _selectedMeasureName = string.Empty;
+    private bool _isFormatting;
+
     public event PropertyChangedEventHandler? PropertyChanged;
+
 
     public bool IsConnecting
     {
@@ -445,10 +452,69 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // DAX Viewer Properties
+    public bool IsDaxViewerOpen
+    {
+        get => _isDaxViewerOpen;
+        set
+        {
+            if (_isDaxViewerOpen != value)
+            {
+                _isDaxViewerOpen = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string SelectedDaxExpression
+    {
+        get => _selectedDaxExpression;
+        set
+        {
+            if (_selectedDaxExpression != value)
+            {
+                _selectedDaxExpression = value;
+                OnPropertyChanged();
+                (FormatDaxCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public string SelectedMeasureName
+    {
+        get => _selectedMeasureName;
+        set
+        {
+            if (_selectedMeasureName != value)
+            {
+                _selectedMeasureName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool IsFormatting
+    {
+        get => _isFormatting;
+        set
+        {
+            if (_isFormatting != value)
+            {
+                _isFormatting = value;
+                OnPropertyChanged();
+                (FormatDaxCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
     public ICommand ConnectCommand { get; }
     public ICommand ClearMeasuresSearchCommand { get; }
     public ICommand ToggleColumnSettingsCommand { get; }
     public ICommand ExportMeasuresCommand { get; }
+    public ICommand ViewDaxCommand { get; }
+    public ICommand CopyDaxCommand { get; }
+    public ICommand CloseDaxViewerCommand { get; }
+    public ICommand FormatDaxCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -457,6 +523,75 @@ public class MainViewModel : INotifyPropertyChanged
         ClearMeasuresSearchCommand = new RelayCommand(async () => await Task.Run(() => MeasuresSearchText = string.Empty), () => true);
         ToggleColumnSettingsCommand = new RelayCommand(async () => await Task.Run(() => IsColumnSettingsOpen = !IsColumnSettingsOpen), () => true);
         ExportMeasuresCommand = new RelayCommand(async () => await ExportMeasuresToExcelAsync(), () => IsConnected && FilteredMeasures.Count > 0);
+        ViewDaxCommand = new RelayCommandWithParameter(ViewDax);
+        CopyDaxCommand = new RelayCommandWithParameter(CopyDax);
+        CloseDaxViewerCommand = new RelayCommand(async () => await Task.Run(() => IsDaxViewerOpen = false), () => true);
+        FormatDaxCommand = new RelayCommand(async () => await FormatDaxAsync(), () => !IsFormatting && !string.IsNullOrEmpty(SelectedDaxExpression));
+    }
+
+    private void ViewDax(object? parameter)
+    {
+        if (parameter is MeasureInfo measure)
+        {
+            SelectedMeasureName = measure.Name;
+            SelectedDaxExpression = measure.Expression ?? string.Empty;
+            IsDaxViewerOpen = true;
+        }
+    }
+
+    private void CopyDax(object? parameter)
+    {
+        string? expression = null;
+        
+        if (parameter is MeasureInfo measure)
+        {
+            expression = measure.Expression;
+        }
+        else if (parameter is string str)
+        {
+            expression = str;
+        }
+        
+        if (!string.IsNullOrEmpty(expression))
+        {
+            try
+            {
+                Clipboard.SetText(expression);
+                StatusMessage = "? DAX expression copied to clipboard!";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Copy error: {ex}");
+                StatusMessage = "Failed to copy to clipboard.";
+            }
+        }
+    }
+
+    private async Task FormatDaxAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedDaxExpression))
+            return;
+
+        try
+        {
+            IsFormatting = true;
+            StatusMessage = "Formatting DAX expression...";
+            
+            var formatterService = new DaxFormatterService();
+            var formattedDax = await formatterService.FormatDaxAsync(SelectedDaxExpression);
+            
+            SelectedDaxExpression = formattedDax;
+            StatusMessage = "? DAX expression formatted!";
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Format error: {ex}");
+            StatusMessage = "Failed to format DAX expression.";
+        }
+        finally
+        {
+            IsFormatting = false;
+        }
     }
 
     private async Task ConnectAsync()
@@ -762,6 +897,26 @@ public class RelayCommand : ICommand
     public bool CanExecute(object? parameter) => _canExecute();
 
     public async void Execute(object? parameter) => await _execute();
+
+    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+}
+
+public class RelayCommandWithParameter : ICommand
+{
+    private readonly Action<object?> _execute;
+    private readonly Func<object?, bool>? _canExecute;
+
+    public event EventHandler? CanExecuteChanged;
+
+    public RelayCommandWithParameter(Action<object?> execute, Func<object?, bool>? canExecute = null)
+    {
+        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        _canExecute = canExecute;
+    }
+
+    public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+
+    public void Execute(object? parameter) => _execute(parameter);
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }

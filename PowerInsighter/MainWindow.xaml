@@ -391,6 +391,222 @@
                                 </ScrollViewer>
                             </Border>
                         </Popup>
+                        
+                        <!-- DAX Viewer Popup -->
+                        <Popup IsOpen="{Binding IsDaxViewerOpen, Mode=TwoWay}"
+                               Placement="Center"
+                               PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                               StaysOpen="True"
+                               AllowsTransparency="True">
+                            <Border Background="White" 
+                                    BorderBrush="#0078D4" 
+                                    BorderThickness="2" 
+                                    CornerRadius="12"
+                                    Width="700"
+                                    MaxHeight="500">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="25" ShadowDepth="5" Opacity="0.3"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Header -->
+                                    <Border Grid.Row="0" 
+                                            Background="#0078D4" 
+                                            CornerRadius="10,10,0,0"
+                                            Padding="20,15">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="DAX Expression" 
+                                                           FontSize="18" 
+                                                           FontWeight="Bold" 
+                                                           Foreground="White"/>
+                                                <TextBlock Text="{Binding SelectedMeasureName}" 
+                                                           FontSize="13" 
+                                                           Foreground="#B3FFFFFF"
+                                                           Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Close Button -->
+                                            <Button Grid.Column="1"
+                                                    Command="{Binding CloseDaxViewerCommand}"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand"
+                                                    VerticalAlignment="Top">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="CloseBorder" 
+                                                                            Background="Transparent" 
+                                                                            CornerRadius="4"
+                                                                            Padding="6">
+                                                                        <TextBlock Text="✕" 
+                                                                                   FontSize="16" 
+                                                                                   FontWeight="Bold"
+                                                                                   Foreground="White"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="CloseBorder" Property="Background" Value="#20FFFFFF"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                    
+                                    <!-- DAX Content -->
+                                    <Border Grid.Row="1" 
+                                            Background="#1E1E1E" 
+                                            Padding="0">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                                      HorizontalScrollBarVisibility="Auto"
+                                                      Padding="20">
+                                            <TextBox Text="{Binding SelectedDaxExpression, Mode=OneWay}"
+                                                     FontFamily="Consolas"
+                                                     FontSize="14"
+                                                     Foreground="#D4D4D4"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     IsReadOnly="True"
+                                                     TextWrapping="Wrap"
+                                                     AcceptsReturn="True"
+                                                     VerticalScrollBarVisibility="Disabled"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                    
+                                    <!-- Footer with Format and Copy Buttons -->
+                                    <Border Grid.Row="2" 
+                                            Background="#F5F5F5" 
+                                            CornerRadius="0,0,10,10"
+                                            Padding="15,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="Press Ctrl+C to copy" 
+                                                           FontSize="12" 
+                                                           Foreground="#666"
+                                                           VerticalAlignment="Center"/>
+                                                <TextBlock Text=" • " 
+                                                           FontSize="12" 
+                                                           Foreground="#999"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                <TextBlock Text="Formatting..." 
+                                                           FontSize="12" 
+                                                           Foreground="#0078D4"
+                                                           FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Format Button -->
+                                            <Button Grid.Column="1"
+                                                    Command="{Binding FormatDaxCommand}"
+                                                    Cursor="Hand"
+                                                    Margin="0,0,10,0"
+                                                    IsEnabled="{Binding IsFormatting, Converter={StaticResource InverseBooleanConverter}}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="FormatBtnBorder" 
+                                                                            Background="#0078D4" 
+                                                                            CornerRadius="6"
+                                                                            Padding="16,8">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="✨" FontSize="14" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="Format" 
+                                                                                       FontSize="13" 
+                                                                                       FontWeight="SemiBold"
+                                                                                       Foreground="White"
+                                                                                       VerticalAlignment="Center"
+                                                                                       Margin="8,0,0,0"/>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#006CBD"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsPressed" Value="True">
+                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#005A9E"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsEnabled" Value="False">
+                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#CCCCCC"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            
+                                            <!-- Copy Button -->
+                                            <Button Grid.Column="2"
+                                                    Command="{Binding CopyDaxCommand}"
+                                                    CommandParameter="{Binding SelectedDaxExpression}"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="CopyBtnBorder" 
+                                                                            Background="#107C10" 
+                                                                            CornerRadius="6"
+                                                                            Padding="16,8">
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="Copy DAX" 
+                                                                                       FontSize="13" 
+                                                                                       FontWeight="SemiBold"
+                                                                                       Foreground="White"
+                                                                                       VerticalAlignment="Center"
+                                                                                       Margin="8,0,0,0"/>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0E6B0E"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsPressed" Value="True">
+                                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0C5A0C"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Popup>
                     </Grid>
                     
                     <!-- Modern DataGrid -->
@@ -699,19 +915,103 @@
                                 
                                 <!-- Expression Column -->
                                 <DataGridTemplateColumn Header="EXPRESSION" 
-                                                        Width="300" 
-                                                        MinWidth="150"
+                                                        Width="350" 
+                                                        MinWidth="200"
                                                         MaxWidth="800"
                                                         SortMemberPath="Expression"
                                                         Visibility="{Binding Data.ShowExpressionColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Expression}" 
-                                                       FontFamily="Consolas" 
-                                                       FontSize="12" 
-                                                       Foreground="#5C2D91"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       ToolTip="{Binding Expression}"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Expression}" 
+                                                           FontFamily="Consolas" 
+                                                           FontSize="12" 
+                                                           Foreground="#5C2D91"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           ToolTip="{Binding Expression}"/>
+                                                
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Column="1" 
+                                                            Orientation="Horizontal" 
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                    <!-- View DAX Button -->
+                                                    <Button Command="{Binding DataContext.ViewDaxCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Padding="4"
+                                                            ToolTip="View DAX Expression"
+                                                            Margin="0,0,4,0">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="BtnBorder" 
+                                                                                    Background="Transparent" 
+                                                                                    CornerRadius="4"
+                                                                                    Padding="4">
+                                                                                <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#E3F2FD"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsPressed" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#BBDEFB"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    
+                                                    <!-- Copy DAX Button -->
+                                                    <Button Command="{Binding DataContext.CopyDaxCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Padding="4"
+                                                            ToolTip="Copy DAX Expression">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="BtnBorder" 
+                                                                                    Background="Transparent" 
+                                                                                    CornerRadius="4"
+                                                                                    Padding="4">
+                                                                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#E8F5E9"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsPressed" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#C8E6C9"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
