@@ -380,19 +380,19 @@
                             CornerRadius="8"
                             Padding="0">
                         <DataGrid ItemsSource="{Binding FilteredMeasures}"
-                        AutoGenerateColumns="False"
-                        IsReadOnly="True"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        GridLinesVisibility="None"
-                        HeadersVisibility="Column"
-                        RowHeight="48"
-                        CanUserResizeRows="False"
-                        CanUserResizeColumns="True"
-                        SelectionMode="Single"
-                        SelectionUnit="FullRow"
-                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                        ScrollViewer.CanContentScroll="True">
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  RowHeight="48"
+                                  CanUserResizeRows="False"
+                                  CanUserResizeColumns="True"
+                                  SelectionMode="Single"
+                                  SelectionUnit="FullRow"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True">
                             
                             <!-- DataGrid Styles and BindingProxy -->
                             <DataGrid.Resources>
@@ -447,24 +447,30 @@
                             </DataGrid.Resources>
                             
                             <DataGrid.Columns>
-                            <!-- S.No Column (Row Number) -->
-                            <DataGridTemplateColumn Header="S.NO" 
-                                                    Width="60" 
-                                                    MinWidth="50"
-                                                    MaxWidth="80"
-                                                    IsReadOnly="True">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, 
-                                                         Converter={StaticResource RowNumberConverter}}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#888"
-                                                   HorizontalAlignment="Center"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                                <!-- S.No Column (Row Number) -->
+                                <DataGridTemplateColumn Header="S.NO" 
+                                                        Width="60" 
+                                                        MinWidth="50"
+                                                        MaxWidth="80"
+                                                        IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="SemiBold"
+                                                       Foreground="#888"
+                                                       HorizontalAlignment="Center">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource RowNumberConverter}">
+                                                        <Binding />
+                                                        <Binding Path="DataContext.FilteredMeasures" 
+                                                                 RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 
-                            <!-- Name Column -->
+                                <!-- Name Column -->
                             <DataGridTemplateColumn Header="NAME" 
                                                     Width="180" 
                                                     MinWidth="100"
