@@ -447,6 +447,7 @@
                                 <!-- Name Column -->
                                 <DataGridTemplateColumn Header="NAME" 
                                                         Width="180" 
+                                                        MinWidth="100"
                                                         SortMemberPath="Name"
                                                         Visibility="{Binding Data.ShowNameColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -462,6 +463,7 @@
                                 <!-- Table Column -->
                                 <DataGridTemplateColumn Header="TABLE" 
                                                         Width="130" 
+                                                        MinWidth="80"
                                                         SortMemberPath="Table"
                                                         Visibility="{Binding Data.ShowTableColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -476,6 +478,7 @@
                                 <!-- Expression Column -->
                                 <DataGridTemplateColumn Header="EXPRESSION" 
                                                         Width="*" 
+                                                        MinWidth="150"
                                                         SortMemberPath="Expression"
                                                         Visibility="{Binding Data.ShowExpressionColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -493,6 +496,7 @@
                                 <!-- Description Column -->
                                 <DataGridTemplateColumn Header="DESCRIPTION" 
                                                         Width="180" 
+                                                        MinWidth="100"
                                                         SortMemberPath="Description"
                                                         Visibility="{Binding Data.ShowDescriptionColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -509,6 +513,7 @@
                                 <!-- Format Column -->
                                 <DataGridTemplateColumn Header="FORMAT" 
                                                         Width="100" 
+                                                        MinWidth="60"
                                                         SortMemberPath="FormatString"
                                                         Visibility="{Binding Data.ShowFormatStringColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -524,6 +529,7 @@
                                 <!-- Hidden Column -->
                                 <DataGridTemplateColumn Header="VISIBILITY" 
                                                         Width="90"
+                                                        MinWidth="70"
                                                         Visibility="{Binding Data.ShowIsHiddenColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -560,6 +566,7 @@
                                 <!-- Display Folder Column -->
                                 <DataGridTemplateColumn Header="FOLDER" 
                                                         Width="120" 
+                                                        MinWidth="80"
                                                         SortMemberPath="DisplayFolder"
                                                         Visibility="{Binding Data.ShowDisplayFolderColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -578,6 +585,7 @@
                                 <!-- Data Type Column -->
                                 <DataGridTemplateColumn Header="DATA TYPE" 
                                                         Width="90" 
+                                                        MinWidth="70"
                                                         SortMemberPath="DataType"
                                                         Visibility="{Binding Data.ShowDataTypeColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -592,6 +600,7 @@
                                 <!-- Detail Rows Expression Column -->
                                 <DataGridTemplateColumn Header="DETAIL ROWS" 
                                                         Width="200" 
+                                                        MinWidth="100"
                                                         SortMemberPath="DetailRowsExpression"
                                                         Visibility="{Binding Data.ShowDetailRowsExpressionColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -609,6 +618,7 @@
                                 <!-- KPI Column -->
                                 <DataGridTemplateColumn Header="KPI" 
                                                         Width="100" 
+                                                        MinWidth="70"
                                                         SortMemberPath="KPI"
                                                         Visibility="{Binding Data.ShowKPIColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -627,6 +637,7 @@
                                 <!-- State Column -->
                                 <DataGridTemplateColumn Header="STATE" 
                                                         Width="100" 
+                                                        MinWidth="70"
                                                         SortMemberPath="State"
                                                         Visibility="{Binding Data.ShowStateColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -669,6 +680,7 @@
                                 <!-- Error Message Column -->
                                 <DataGridTemplateColumn Header="ERROR" 
                                                         Width="200" 
+                                                        MinWidth="100"
                                                         SortMemberPath="ErrorMessage"
                                                         Visibility="{Binding Data.ShowErrorMessageColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -685,6 +697,7 @@
                                 <!-- Lineage Tag Column -->
                                 <DataGridTemplateColumn Header="LINEAGE TAG" 
                                                         Width="150" 
+                                                        MinWidth="80"
                                                         SortMemberPath="LineageTag"
                                                         Visibility="{Binding Data.ShowLineageTagColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -702,6 +715,7 @@
                                 <!-- Modified Time Column -->
                                 <DataGridTemplateColumn Header="MODIFIED" 
                                                         Width="140" 
+                                                        MinWidth="100"
                                                         SortMemberPath="ModifiedTime"
                                                         Visibility="{Binding Data.ShowModifiedTimeColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
