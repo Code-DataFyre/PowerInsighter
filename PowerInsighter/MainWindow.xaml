@@ -55,10 +55,111 @@
 
         <!-- Main Content Area with Tabs -->
         <TabControl Grid.Row="2" 
-                    Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisibilityConverter}}">
+                    Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Background="Transparent"
+                    BorderThickness="0">
+            <TabControl.Resources>
+                <!-- Modern TabItem Style -->
+                <Style TargetType="TabItem">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="16,10"/>
+                    <Setter Property="Margin" Value="0,0,2,0"/>
+                    <Setter Property="FontSize" Value="13"/>
+                    <Setter Property="FontWeight" Value="Normal"/>
+                    <Setter Property="Foreground" Value="#666666"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Grid x:Name="Root">
+                                    <Border x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            BorderThickness="1,1,1,0"
+                                            BorderBrush="Transparent"
+                                            CornerRadius="6,6,0,0"
+                                            Padding="{TemplateBinding Padding}"
+                                            Margin="0,0,0,-1">
+                                        <ContentPresenter x:Name="ContentSite"
+                                                          ContentSource="Header"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <Border x:Name="BottomIndicator"
+                                            Height="3"
+                                            VerticalAlignment="Bottom"
+                                            Background="Transparent"
+                                            CornerRadius="2,2,0,0"
+                                            Margin="8,0,8,-1"/>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Foreground" Value="#0078D4"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter TargetName="Border" Property="Background" Value="White"/>
+                                        <Setter TargetName="Border" Property="BorderBrush" Value="#E0E0E0"/>
+                                        <Setter TargetName="BottomIndicator" Property="Background" Value="#0078D4"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Border" Property="Background" Value="#F5F5F5"/>
+                                    </Trigger>
+                                    <MultiTrigger>
+                                        <MultiTrigger.Conditions>
+                                            <Condition Property="IsSelected" Value="True"/>
+                                            <Condition Property="IsMouseOver" Value="True"/>
+                                        </MultiTrigger.Conditions>
+                                        <Setter TargetName="Border" Property="Background" Value="White"/>
+                                    </MultiTrigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+            
+            <!-- TabControl Panel Template for horizontal tabs with border -->
+            <TabControl.Template>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Tab Header Panel with Border -->
+                        <Border Grid.Row="0" 
+                                Background="#FAFAFA" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="8,8,0,0"
+                                Padding="4,4,4,0">
+                            <TabPanel x:Name="HeaderPanel"
+                                      IsItemsHost="True"
+                                      Background="Transparent"/>
+                        </Border>
+                        
+                        <!-- Content Panel -->
+                        <Border Grid.Row="1" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1,0,1,1" 
+                                CornerRadius="0,0,8,8">
+                            <ContentPresenter x:Name="PART_SelectedContentHost"
+                                              ContentSource="SelectedContent"
+                                              Margin="0"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </TabControl.Template>
             
             <!-- Model Overview Tab -->
-            <TabItem Header="📊 Model Overview">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📊" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Model Overview" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
                     <StackPanel>
                         <TextBlock Text="Model Overview" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
@@ -121,7 +222,13 @@
             </TabItem>
             
             <!-- Measures Tab -->
-            <TabItem Header="📐 Measures">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📐" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Measures" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="15">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1271,7 +1378,13 @@
             </TabItem>
             
             <!-- Columns Tab -->
-            <TabItem Header="📋 Columns">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Columns" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1300,7 +1413,13 @@
             </TabItem>
             
             <!-- Relationships Tab -->
-            <TabItem Header="🔗 Relationships">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔗" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Relationships" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1330,7 +1449,13 @@
             </TabItem>
             
             <!-- Dependencies Tab -->
-            <TabItem Header="🔄 Dependencies">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔄" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Dependencies" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1357,7 +1482,13 @@
             </TabItem>
             
             <!-- Unused Objects Tab -->
-            <TabItem Header="⚠️ Unused Objects">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚠️" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Unused Objects" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1387,7 +1518,13 @@
             </TabItem>
             
             <!-- Impact Analysis Tab -->
-            <TabItem Header="💥 Impact Analysis">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="💥" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Impact Analysis" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
