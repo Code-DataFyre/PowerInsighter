@@ -259,12 +259,11 @@
                         </ToggleButton>
                         
                         <!-- Column Settings Popup -->
-                        <Popup Grid.Column="3"
-                               IsOpen="{Binding IsColumnSettingsOpen, Mode=TwoWay}"
+                        <Popup IsOpen="{Binding IsColumnSettingsOpen, Mode=TwoWay}"
                                PlacementTarget="{Binding ElementName=SettingsButton}"
-                               Placement="Bottom"
-                               HorizontalOffset="-200"
-                               VerticalOffset="5"
+                               Placement="Left"
+                               HorizontalOffset="35"
+                               VerticalOffset="30"
                                StaysOpen="False"
                                AllowsTransparency="True"
                                DataContext="{Binding}">
@@ -272,9 +271,9 @@
                                     BorderBrush="#E0E0E0" 
                                     BorderThickness="1" 
                                     CornerRadius="8"
-                                    Padding="15"
-                                    MinWidth="220"
-                                    MaxHeight="450">
+                                    Padding="12"
+                                    Width="200"
+                                    MaxHeight="400">
                                 <Border.Effect>
                                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2"/>
                                 </Border.Effect>
@@ -282,92 +281,66 @@
                                     <StackPanel>
                                         <TextBlock Text="Visible Columns" 
                                                    FontWeight="Bold" 
-                                                   FontSize="14" 
-                                                   Margin="0,0,0,12"
+                                                   FontSize="13" 
+                                                   Margin="0,0,0,10"
                                                    Foreground="#333"/>
                                         
-                                        <!-- Core Properties -->
-                                        <TextBlock Text="Core Properties" 
-                                                   FontWeight="SemiBold" 
-                                                   FontSize="11" 
-                                                   Foreground="#666"
-                                                   Margin="0,0,0,6"/>
                                         <CheckBox Content="Name" 
                                                   IsChecked="{Binding ShowNameColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Table" 
                                                   IsChecked="{Binding ShowTableColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Expression" 
                                                   IsChecked="{Binding ShowExpressionColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Description" 
                                                   IsChecked="{Binding ShowDescriptionColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Format String" 
                                                   IsChecked="{Binding ShowFormatStringColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
-                                        <CheckBox Content="Visibility (Hidden)" 
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
+                                        <CheckBox Content="Visibility" 
                                                   IsChecked="{Binding ShowIsHiddenColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Display Folder" 
                                                   IsChecked="{Binding ShowDisplayFolderColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Data Type" 
                                                   IsChecked="{Binding ShowDataTypeColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
-                                        
-                                        <!-- Separator -->
-                                        <Separator Margin="0,10"/>
-                                        
-                                        <!-- Additional Properties -->
-                                        <TextBlock Text="Additional Properties" 
-                                                   FontWeight="SemiBold" 
-                                                   FontSize="11" 
-                                                   Foreground="#666"
-                                                   Margin="0,4,0,6"/>
-                                        <CheckBox Content="Detail Rows Expression" 
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
+                                        <CheckBox Content="Detail Rows" 
                                                   IsChecked="{Binding ShowDetailRowsExpressionColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="KPI" 
                                                   IsChecked="{Binding ShowKPIColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="State" 
                                                   IsChecked="{Binding ShowStateColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Error Message" 
                                                   IsChecked="{Binding ShowErrorMessageColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Lineage Tag" 
                                                   IsChecked="{Binding ShowLineageTagColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
-                                        
-                                        <!-- Separator -->
-                                        <Separator Margin="0,10"/>
-                                        
-                                        <!-- Metadata -->
-                                        <TextBlock Text="Metadata" 
-                                                   FontWeight="SemiBold" 
-                                                   FontSize="11" 
-                                                   Foreground="#666"
-                                                   Margin="0,4,0,6"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                         <CheckBox Content="Modified Time" 
                                                   IsChecked="{Binding ShowModifiedTimeColumn, Mode=TwoWay}" 
-                                                  Margin="0,4" 
-                                                  FontSize="13"/>
+                                                  Margin="0,3" 
+                                                  FontSize="12"/>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Border>
