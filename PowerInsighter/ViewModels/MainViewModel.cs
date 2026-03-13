@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using ClosedXML.Excel;
+using Microsoft.Win32;
 using PowerInsighter.Models;
 using PowerInsighter.Services;
 using PowerInsighter.Views;
@@ -74,6 +76,7 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _isConnected = value;
                 OnPropertyChanged();
+                (ExportMeasuresCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
@@ -141,6 +144,7 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _filteredMeasures = value;
                 OnPropertyChanged();
+                (ExportMeasuresCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
@@ -444,6 +448,7 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ConnectCommand { get; }
     public ICommand ClearMeasuresSearchCommand { get; }
     public ICommand ToggleColumnSettingsCommand { get; }
+    public ICommand ExportMeasuresCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -451,6 +456,7 @@ public class MainViewModel : INotifyPropertyChanged
         ConnectCommand = new RelayCommand(async () => await ConnectAsync(), () => !IsConnecting);
         ClearMeasuresSearchCommand = new RelayCommand(async () => await Task.Run(() => MeasuresSearchText = string.Empty), () => true);
         ToggleColumnSettingsCommand = new RelayCommand(async () => await Task.Run(() => IsColumnSettingsOpen = !IsColumnSettingsOpen), () => true);
+        ExportMeasuresCommand = new RelayCommand(async () => await ExportMeasuresToExcelAsync(), () => IsConnected && FilteredMeasures.Count > 0);
     }
 
     private async Task ConnectAsync()
@@ -610,6 +616,128 @@ public class MainViewModel : INotifyPropertyChanged
             }
         }
         ImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>(impactAnalysis);
+    }
+
+    private async Task ExportMeasuresToExcelAsync()
+    {
+        try
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                FileName = $"Measures_Export_{DateTime.Now:yyyyMMdd_HHmmss}"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                await Task.Run(() =>
+                {
+                    using var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add("Measures");
+
+                    // Track column index for visible columns only
+                    int col = 1;
+
+                    // Add S.No column (always visible)
+                    worksheet.Cell(1, col).Value = "S.No";
+                    col++;
+
+                    // Add headers based on visibility settings
+                    var columnMappings = new List<(string Header, Func<MeasureInfo, object?> ValueGetter, bool IsVisible)>
+                    {
+                        ("Name", m => m.Name, ShowNameColumn),
+                        ("Table", m => m.Table, ShowTableColumn),
+                        ("Expression", m => m.Expression, ShowExpressionColumn),
+                        ("Description", m => m.Description, ShowDescriptionColumn),
+                        ("Format String", m => m.FormatString, ShowFormatStringColumn),
+                        ("Is Hidden", m => m.IsHidden ? "Hidden" : "Visible", ShowIsHiddenColumn),
+                        ("Display Folder", m => m.DisplayFolder, ShowDisplayFolderColumn),
+                        ("Data Type", m => m.DataType, ShowDataTypeColumn),
+                        ("Detail Rows Expression", m => m.DetailRowsExpression, ShowDetailRowsExpressionColumn),
+                        ("KPI", m => m.KPI, ShowKPIColumn),
+                        ("State", m => m.State, ShowStateColumn),
+                        ("Error Message", m => m.ErrorMessage, ShowErrorMessageColumn),
+                        ("Lineage Tag", m => m.LineageTag, ShowLineageTagColumn),
+                        ("Modified Time", m => m.ModifiedTime?.ToString("g"), ShowModifiedTimeColumn)
+                    };
+
+                    // Add visible column headers
+                    var visibleColumns = columnMappings.Where(c => c.IsVisible).ToList();
+                    foreach (var column in visibleColumns)
+                    {
+                        worksheet.Cell(1, col).Value = column.Header;
+                        col++;
+                    }
+
+                    // Style header row
+                    var headerRange = worksheet.Range(1, 1, 1, 1 + visibleColumns.Count);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#0078D4");
+                    headerRange.Style.Font.FontColor = XLColor.White;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Add data rows
+                    int row = 2;
+                    int serialNumber = 1;
+                    foreach (var measure in FilteredMeasures)
+                    {
+                        col = 1;
+
+                        // S.No
+                        worksheet.Cell(row, col).Value = serialNumber++;
+                        col++;
+
+                        // Add visible column values
+                        foreach (var column in visibleColumns)
+                        {
+                            var value = column.ValueGetter(measure);
+                            if (value != null)
+                            {
+                                worksheet.Cell(row, col).Value = value.ToString();
+                            }
+                            col++;
+                        }
+                        row++;
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Columns().AdjustToContents();
+
+                    // Set maximum column width to prevent extremely wide columns
+                    foreach (var column in worksheet.ColumnsUsed())
+                    {
+                        if (column.Width > 50)
+                        {
+                            column.Width = 50;
+                        }
+                    }
+
+                    // Add filters
+                    worksheet.RangeUsed()?.SetAutoFilter();
+
+                    workbook.SaveAs(saveFileDialog.FileName);
+                });
+
+                MessageBox.Show(
+                    $"Measures exported successfully to:\n{saveFileDialog.FileName}",
+                    "Export Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                // Open the file location
+                Process.Start("explorer.exe", $"/select,\"{saveFileDialog.FileName}\"");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Failed to export measures.\n\nError: {ex.Message}",
+                "Export Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Debug.WriteLine($"Export error: {ex}");
+        }
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
