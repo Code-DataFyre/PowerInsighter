@@ -293,4 +293,185 @@ public class PowerBIService : IPowerBIService
         }
         return ports;
     }
+
+    public async Task<ModelOverview> GetModelOverviewAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var database = server.Databases[0];
+            var model = database.Model;
+
+            var tableCount = model.Tables.Count;
+            var measureCount = model.Tables.Sum(t => t.Measures.Count);
+            var columnCount = model.Tables.Sum(t => t.Columns.Count);
+            var relationshipCount = model.Relationships.Count;
+            var calculatedColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.Type == ColumnType.Calculated));
+            var calculatedTableCount = model.Tables.Count(t => t.Partitions.Any(p => p.SourceType == PartitionSourceType.Calculated));
+
+            var overview = new ModelOverview
+            {
+                ModelName = database.Name,
+                TableCount = tableCount,
+                MeasureCount = measureCount,
+                ColumnCount = columnCount,
+                RelationshipCount = relationshipCount,
+                CalculatedColumnCount = calculatedColumnCount,
+                CalculatedTableCount = calculatedTableCount,
+                ModelSize = database.EstimatedSize,
+                LastRefresh = database.LastUpdate,
+                CompatibilityLevel = database.CompatibilityLevel.ToString()
+            };
+
+            server.Disconnect();
+            return overview;
+        }, cancellationToken);
+    }
+
+    public async Task<List<MeasureInfo>> GetMeasuresAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var measures = new List<MeasureInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            foreach (Table table in model.Tables)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                foreach (Measure measure in table.Measures)
+                {
+                    // Get DetailRowsExpression safely (may not exist in older versions)
+                    string? detailRowsExpr = null;
+                    try
+                    {
+                        var detailRowsProp = measure.GetType().GetProperty("DetailRowsExpression");
+                        if (detailRowsProp?.GetValue(measure) is object detailRows)
+                        {
+                            var exprProp = detailRows.GetType().GetProperty("Expression");
+                            detailRowsExpr = exprProp?.GetValue(detailRows)?.ToString();
+                        }
+                    }
+                    catch { /* Property may not exist */ }
+
+                    measures.Add(new MeasureInfo
+                    {
+                        Name = measure.Name,
+                        Table = table.Name,
+                        Expression = measure.Expression,
+                        Description = measure.Description,
+                        FormatString = measure.FormatString,
+                        IsHidden = measure.IsHidden,
+                        DisplayFolder = measure.DisplayFolder,
+                        DataType = measure.DataType.ToString(),
+                        DetailRowsExpression = detailRowsExpr,
+                        KPI = measure.KPI?.TargetExpression,
+                        State = measure.State.ToString(),
+                        ErrorMessage = measure.ErrorMessage,
+                        LineageTag = measure.LineageTag,
+                        ModifiedTime = measure.ModifiedTime
+                    });
+                }
+            }
+
+            server.Disconnect();
+            return measures;
+        }, cancellationToken);
+    }
+
+    public async Task<List<ColumnInfo>> GetColumnsAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var columns = new List<ColumnInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            foreach (Table table in model.Tables)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                foreach (Column column in table.Columns)
+                {
+                    var isCalculated = column.Type == ColumnType.Calculated;
+                    string? expression = null;
+                    
+                    if (isCalculated && column is CalculatedColumn calcCol)
+                    {
+                        expression = calcCol.Expression;
+                    }
+
+                    columns.Add(new ColumnInfo
+                    {
+                        Name = column.Name,
+                        Table = table.Name,
+                        DataType = column.DataType.ToString(),
+                        IsCalculated = isCalculated,
+                        Expression = expression,
+                        IsHidden = column.IsHidden,
+                        Description = column.Description
+                    });
+                }
+            }
+
+            server.Disconnect();
+            return columns;
+        }, cancellationToken);
+    }
+
+    public async Task<List<RelationshipInfo>> GetRelationshipsAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var relationships = new List<RelationshipInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            foreach (var relationship in model.Relationships)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (relationship is SingleColumnRelationship scr)
+                {
+                    relationships.Add(new RelationshipInfo
+                    {
+                        FromTable = scr.FromTable.Name,
+                        FromColumn = scr.FromColumn.Name,
+                        ToTable = scr.ToTable.Name,
+                        ToColumn = scr.ToColumn.Name,
+                        Cardinality = scr.FromCardinality.ToString() + " to " + scr.ToCardinality.ToString(),
+                        CrossFilterDirection = scr.CrossFilteringBehavior.ToString(),
+                        IsActive = scr.IsActive
+                    });
+                }
+            }
+
+            server.Disconnect();
+            return relationships;
+        }, cancellationToken);
+    }
 }

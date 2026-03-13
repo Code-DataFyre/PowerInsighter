@@ -447,13 +447,30 @@
                             </DataGrid.Resources>
                             
                             <DataGrid.Columns>
-                                <!-- Name Column -->
-                                <DataGridTemplateColumn Header="NAME" 
-                                                        Width="180" 
-                                                        MinWidth="100"
-                                                        MaxWidth="400"
-                                                        SortMemberPath="Name"
-                                                        Visibility="{Binding Data.ShowNameColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <!-- S.No Column (Row Number) -->
+                            <DataGridTemplateColumn Header="S.NO" 
+                                                    Width="60" 
+                                                    MinWidth="50"
+                                                    MaxWidth="80"
+                                                    IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, 
+                                                         Converter={StaticResource RowNumberConverter}}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#888"
+                                                   HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                                
+                            <!-- Name Column -->
+                            <DataGridTemplateColumn Header="NAME" 
+                                                    Width="180" 
+                                                    MinWidth="100"
+                                                    MaxWidth="400"
+                                                    SortMemberPath="Name"
+                                                    Visibility="{Binding Data.ShowNameColumn, Source={StaticResource Proxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">

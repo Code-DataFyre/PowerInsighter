@@ -508,13 +508,29 @@ public class MainViewModel : INotifyPropertyChanged
 
         try
         {
-            var metadataList = await _powerBIService.LoadMetadataAsync(instance.Port, cancellationToken);
-
-            Metadata = new ObservableCollection<ModelMetadata>(metadataList);
-            StatusMessage = $"? Connected to {instance.DisplayName}! Loaded {metadataList.Count} items";
+            // Load model overview
+            StatusMessage = $"Loading model overview from {instance.DisplayName}...";
+            ModelOverview = await _powerBIService.GetModelOverviewAsync(instance.Port, cancellationToken);
             
-            // Load dummy data for all tabs
-            LoadDummyData(instance.DisplayName);
+            // Load measures with all properties including Description
+            StatusMessage = $"Loading measures from {instance.DisplayName}...";
+            var measures = await _powerBIService.GetMeasuresAsync(instance.Port, cancellationToken);
+            Measures = new ObservableCollection<MeasureInfo>(measures);
+            
+            // Load columns
+            StatusMessage = $"Loading columns from {instance.DisplayName}...";
+            var columns = await _powerBIService.GetColumnsAsync(instance.Port, cancellationToken);
+            Columns = new ObservableCollection<ColumnInfo>(columns);
+            
+            // Load relationships
+            StatusMessage = $"Loading relationships from {instance.DisplayName}...";
+            var relationships = await _powerBIService.GetRelationshipsAsync(instance.Port, cancellationToken);
+            Relationships = new ObservableCollection<RelationshipInfo>(relationships);
+            
+            // Load other data (dependencies, unused objects, impact analysis - these require more complex analysis)
+            LoadAnalysisData();
+            
+            StatusMessage = $"? Connected to {instance.DisplayName}! Loaded {ModelOverview.MeasureCount} measures, {ModelOverview.ColumnCount} columns, {ModelOverview.RelationshipCount} relationships";
             IsConnected = true;
         }
         catch (Exception ex)
@@ -530,101 +546,70 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
-    private void LoadDummyData(string modelName)
+    private void LoadAnalysisData()
     {
-        // Model Overview
-        ModelOverview = new ModelOverview
+        // Dependencies - analyze measure expressions for references
+        var dependencies = new List<DependencyInfo>();
+        foreach (var measure in Measures)
         {
-            ModelName = modelName,
-            TableCount = 12,
-            MeasureCount = 45,
-            ColumnCount = 156,
-            RelationshipCount = 18,
-            CalculatedColumnCount = 23,
-            CalculatedTableCount = 3,
-            ModelSize = 125_000_000,
-            LastRefresh = DateTime.Now.AddHours(-2),
-            CompatibilityLevel = "1567"
-        };
+            if (!string.IsNullOrEmpty(measure.Expression))
+            {
+                // Find measure references in the expression
+                foreach (var otherMeasure in Measures.Where(m => m.Name != measure.Name))
+                {
+                    if (measure.Expression.Contains($"[{otherMeasure.Name}]"))
+                    {
+                        dependencies.Add(new DependencyInfo
+                        {
+                            ObjectName = measure.Name,
+                            ObjectType = "Measure",
+                            DependsOn = otherMeasure.Name,
+                            DependencyType = "Measure Reference"
+                        });
+                    }
+                }
+            }
+        }
+        Dependencies = new ObservableCollection<DependencyInfo>(dependencies);
 
-        // Measures
-        Measures = new ObservableCollection<MeasureInfo>
+        // Unused Objects - find hidden measures and columns with no references
+        var unusedObjects = new List<UnusedObjectInfo>();
+        foreach (var measure in Measures.Where(m => m.IsHidden))
         {
-            new() { Name = "Total Sales", Table = "Sales", Expression = "SUM(Sales[Amount])", Description = "Sum of all sales amounts", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double", State = "Ready", LineageTag = "a1b2c3d4-e5f6-7890-abcd-ef1234567890", ModifiedTime = DateTime.Now.AddDays(-5) },
-            new() { Name = "Total Cost", Table = "Sales", Expression = "SUM(Sales[Cost])", Description = "Sum of all costs", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Costs", DataType = "Double", State = "Ready", LineageTag = "b2c3d4e5-f6a7-8901-bcde-f12345678901", ModifiedTime = DateTime.Now.AddDays(-3) },
-            new() { Name = "Profit Margin", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Total Cost], [Total Sales])", Description = "Profit margin percentage", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double", KPI = "Profit KPI", State = "Ready", LineageTag = "c3d4e5f6-a7b8-9012-cdef-123456789012", ModifiedTime = DateTime.Now.AddDays(-2) },
-            new() { Name = "YTD Sales", Table = "Sales", Expression = "TOTALYTD([Total Sales], 'Date'[Date])", Description = "Year to date sales", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double", DetailRowsExpression = "SELECTCOLUMNS(Sales, \"Date\", Sales[OrderDate], \"Amount\", Sales[Amount])", State = "Ready", LineageTag = "d4e5f6a7-b8c9-0123-def0-234567890123", ModifiedTime = DateTime.Now.AddDays(-1) },
-            new() { Name = "Previous Year Sales", Table = "Sales", Expression = "CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))", Description = "Sales from previous year", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double", State = "Ready", LineageTag = "e5f6a7b8-c9d0-1234-ef01-345678901234", ModifiedTime = DateTime.Now.AddDays(-4) },
-            new() { Name = "Sales Growth %", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Previous Year Sales], [Previous Year Sales])", Description = "Year over year sales growth", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double", KPI = "Growth KPI", State = "Ready", LineageTag = "f6a7b8c9-d0e1-2345-f012-456789012345", ModifiedTime = DateTime.Now.AddHours(-6) },
-            new() { Name = "Customer Count", Table = "Customers", Expression = "DISTINCTCOUNT(Sales[CustomerID])", Description = "Count of unique customers", FormatString = "#,##0", IsHidden = false, DisplayFolder = "Customers", DataType = "Int64", State = "Ready", LineageTag = "a7b8c9d0-e1f2-3456-0123-567890123456", ModifiedTime = DateTime.Now.AddHours(-12) },
-            new() { Name = "Average Order Value", Table = "Sales", Expression = "DIVIDE([Total Sales], COUNTROWS(Sales))", Description = "Average value per order", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double", State = "Ready", LineageTag = "b8c9d0e1-f2a3-4567-1234-678901234567", ModifiedTime = DateTime.Now.AddHours(-3) },
-            new() { Name = "_Helper Measure", Table = "Calculations", Expression = "1", Description = "Internal helper measure", FormatString = "", IsHidden = true, DisplayFolder = "_Internal", DataType = "Int64", State = "Ready", LineageTag = "c9d0e1f2-a3b4-5678-2345-789012345678", ModifiedTime = DateTime.Now.AddDays(-10) },
-            new() { Name = "Broken Measure", Table = "Sales", Expression = "SUM(NonExistent[Column])", Description = "This measure has an error", FormatString = "", IsHidden = false, DisplayFolder = "Debug", DataType = "Unknown", State = "SemanticError", ErrorMessage = "Column 'NonExistent[Column]' cannot be found", LineageTag = "d0e1f2a3-b4c5-6789-3456-890123456789", ModifiedTime = DateTime.Now.AddHours(-1) },
-        };
+            var isReferenced = Measures.Any(m => m.Expression?.Contains($"[{measure.Name}]") == true);
+            if (!isReferenced)
+            {
+                unusedObjects.Add(new UnusedObjectInfo
+                {
+                    Name = measure.Name,
+                    ObjectType = "Measure",
+                    Table = measure.Table,
+                    Reason = "Hidden measure with no references"
+                });
+            }
+        }
+        UnusedObjects = new ObservableCollection<UnusedObjectInfo>(unusedObjects);
 
-        // Columns
-        Columns = new ObservableCollection<ColumnInfo>
+        // Impact Analysis - analyze what depends on each measure
+        var impactAnalysis = new List<ImpactAnalysisInfo>();
+        foreach (var measure in Measures)
         {
-            new() { Name = "ProductID", Table = "Products", DataType = "Int64", IsCalculated = false, IsHidden = false, Description = "Product identifier" },
-            new() { Name = "ProductName", Table = "Products", DataType = "String", IsCalculated = false, IsHidden = false, Description = "Name of the product" },
-            new() { Name = "Category", Table = "Products", DataType = "String", IsCalculated = false, IsHidden = false, Description = "Product category" },
-            new() { Name = "UnitPrice", Table = "Products", DataType = "Decimal", IsCalculated = false, IsHidden = false, Description = "Price per unit" },
-            new() { Name = "FullName", Table = "Customers", DataType = "String", Expression = "[FirstName] & \" \" & [LastName]", IsCalculated = true, IsHidden = false, Description = "Customer full name" },
-            new() { Name = "OrderDate", Table = "Sales", DataType = "DateTime", IsCalculated = false, IsHidden = false, Description = "Date of the order" },
-            new() { Name = "Amount", Table = "Sales", DataType = "Decimal", IsCalculated = false, IsHidden = false, Description = "Order amount" },
-            new() { Name = "Year", Table = "Date", DataType = "Int64", Expression = "YEAR([Date])", IsCalculated = true, IsHidden = false, Description = "Year number" },
-            new() { Name = "Month", Table = "Date", DataType = "String", Expression = "FORMAT([Date], \"MMMM\")", IsCalculated = true, IsHidden = false, Description = "Month name" },
-            new() { Name = "Quarter", Table = "Date", DataType = "String", Expression = "\"Q\" & QUARTER([Date])", IsCalculated = true, IsHidden = false, Description = "Quarter label" },
-        };
-
-        // Relationships
-        Relationships = new ObservableCollection<RelationshipInfo>
-        {
-            new() { FromTable = "Sales", FromColumn = "ProductID", ToTable = "Products", ToColumn = "ProductID", Cardinality = "Many to One", CrossFilterDirection = "Single", IsActive = true },
-            new() { FromTable = "Sales", FromColumn = "CustomerID", ToTable = "Customers", ToColumn = "CustomerID", Cardinality = "Many to One", CrossFilterDirection = "Single", IsActive = true },
-            new() { FromTable = "Sales", FromColumn = "OrderDate", ToTable = "Date", ToColumn = "Date", Cardinality = "Many to One", CrossFilterDirection = "Single", IsActive = true },
-            new() { FromTable = "Products", FromColumn = "CategoryID", ToTable = "Categories", ToColumn = "CategoryID", Cardinality = "Many to One", CrossFilterDirection = "Both", IsActive = true },
-            new() { FromTable = "Customers", FromColumn = "RegionID", ToTable = "Regions", ToColumn = "RegionID", Cardinality = "Many to One", CrossFilterDirection = "Single", IsActive = true },
-            new() { FromTable = "Sales", FromColumn = "ShipDate", ToTable = "Date", ToColumn = "Date", Cardinality = "Many to One", CrossFilterDirection = "Single", IsActive = false },
-        };
-
-        // Dependencies
-        Dependencies = new ObservableCollection<DependencyInfo>
-        {
-            new() { ObjectName = "Profit Margin", ObjectType = "Measure", DependsOn = "Total Sales", DependencyType = "Measure Reference" },
-            new() { ObjectName = "Profit Margin", ObjectType = "Measure", DependsOn = "Total Cost", DependencyType = "Measure Reference" },
-            new() { ObjectName = "YTD Sales", ObjectType = "Measure", DependsOn = "Total Sales", DependencyType = "Measure Reference" },
-            new() { ObjectName = "YTD Sales", ObjectType = "Measure", DependsOn = "Date[Date]", DependencyType = "Column Reference" },
-            new() { ObjectName = "Sales Growth %", ObjectType = "Measure", DependsOn = "Total Sales", DependencyType = "Measure Reference" },
-            new() { ObjectName = "Sales Growth %", ObjectType = "Measure", DependsOn = "Previous Year Sales", DependencyType = "Measure Reference" },
-            new() { ObjectName = "FullName", ObjectType = "Calculated Column", DependsOn = "FirstName", DependencyType = "Column Reference" },
-            new() { ObjectName = "FullName", ObjectType = "Calculated Column", DependsOn = "LastName", DependencyType = "Column Reference" },
-            new() { ObjectName = "Year", ObjectType = "Calculated Column", DependsOn = "Date[Date]", DependencyType = "Column Reference" },
-        };
-
-        // Unused Objects
-        UnusedObjects = new ObservableCollection<UnusedObjectInfo>
-        {
-            new() { Name = "_Helper Measure", ObjectType = "Measure", Table = "Calculations", Reason = "Not referenced in any visual or other measure" },
-            new() { Name = "OldProductCode", ObjectType = "Column", Table = "Products", Reason = "Hidden column with no references" },
-            new() { Name = "TempCalc", ObjectType = "Calculated Column", Table = "Sales", Reason = "Not used in any visual or measure" },
-            new() { Name = "Backup_Sales", ObjectType = "Table", Table = "-", Reason = "Hidden table with no active relationships" },
-            new() { Name = "LegacyCustomerID", ObjectType = "Column", Table = "Customers", Reason = "Deprecated column, no longer used" },
-        };
-
-        // Impact Analysis
-        ImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>
-        {
-            new() { ObjectName = "Total Sales", ObjectType = "Measure", ImpactedObject = "Profit Margin", ImpactType = "Direct Dependency", Severity = "High" },
-            new() { ObjectName = "Total Sales", ObjectType = "Measure", ImpactedObject = "YTD Sales", ImpactType = "Direct Dependency", Severity = "High" },
-            new() { ObjectName = "Total Sales", ObjectType = "Measure", ImpactedObject = "Sales Growth %", ImpactType = "Direct Dependency", Severity = "High" },
-            new() { ObjectName = "Total Sales", ObjectType = "Measure", ImpactedObject = "Average Order Value", ImpactType = "Direct Dependency", Severity = "High" },
-            new() { ObjectName = "Date[Date]", ObjectType = "Column", ImpactedObject = "Year", ImpactType = "Column Reference", Severity = "Medium" },
-            new() { ObjectName = "Date[Date]", ObjectType = "Column", ImpactedObject = "Month", ImpactType = "Column Reference", Severity = "Medium" },
-            new() { ObjectName = "Date[Date]", ObjectType = "Column", ImpactedObject = "Quarter", ImpactType = "Column Reference", Severity = "Medium" },
-            new() { ObjectName = "Products", ObjectType = "Table", ImpactedObject = "Sales", ImpactType = "Relationship", Severity = "Critical" },
-            new() { ObjectName = "Customers", ObjectType = "Table", ImpactedObject = "Sales", ImpactType = "Relationship", Severity = "Critical" },
-        };
+            var dependentMeasures = Measures.Where(m => 
+                m.Expression?.Contains($"[{measure.Name}]") == true && m.Name != measure.Name);
+            
+            foreach (var dependent in dependentMeasures)
+            {
+                impactAnalysis.Add(new ImpactAnalysisInfo
+                {
+                    ObjectName = measure.Name,
+                    ObjectType = "Measure",
+                    ImpactedObject = dependent.Name,
+                    ImpactType = "Direct Dependency",
+                    Severity = "High"
+                });
+            }
+        }
+        ImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>(impactAnalysis);
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
