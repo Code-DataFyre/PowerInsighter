@@ -40,6 +40,14 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _showIsHiddenColumn = true;
     private bool _showDisplayFolderColumn = true;
     private bool _showDataTypeColumn = true;
+    
+    // Additional column visibility (default unchecked)
+    private bool _showDetailRowsExpressionColumn = false;
+    private bool _showKPIColumn = false;
+    private bool _showStateColumn = false;
+    private bool _showErrorMessageColumn = false;
+    private bool _showLineageTagColumn = false;
+    private bool _showModifiedTimeColumn = false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -354,6 +362,85 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // Additional column visibility properties (default unchecked)
+    public bool ShowDetailRowsExpressionColumn
+    {
+        get => _showDetailRowsExpressionColumn;
+        set
+        {
+            if (_showDetailRowsExpressionColumn != value)
+            {
+                _showDetailRowsExpressionColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowKPIColumn
+    {
+        get => _showKPIColumn;
+        set
+        {
+            if (_showKPIColumn != value)
+            {
+                _showKPIColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowStateColumn
+    {
+        get => _showStateColumn;
+        set
+        {
+            if (_showStateColumn != value)
+            {
+                _showStateColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowErrorMessageColumn
+    {
+        get => _showErrorMessageColumn;
+        set
+        {
+            if (_showErrorMessageColumn != value)
+            {
+                _showErrorMessageColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowLineageTagColumn
+    {
+        get => _showLineageTagColumn;
+        set
+        {
+            if (_showLineageTagColumn != value)
+            {
+                _showLineageTagColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowModifiedTimeColumn
+    {
+        get => _showModifiedTimeColumn;
+        set
+        {
+            if (_showModifiedTimeColumn != value)
+            {
+                _showModifiedTimeColumn = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public ICommand ConnectCommand { get; }
     public ICommand ClearMeasuresSearchCommand { get; }
     public ICommand ToggleColumnSettingsCommand { get; }
@@ -463,15 +550,16 @@ public class MainViewModel : INotifyPropertyChanged
         // Measures
         Measures = new ObservableCollection<MeasureInfo>
         {
-            new() { Name = "Total Sales", Table = "Sales", Expression = "SUM(Sales[Amount])", Description = "Sum of all sales amounts", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double" },
-            new() { Name = "Total Cost", Table = "Sales", Expression = "SUM(Sales[Cost])", Description = "Sum of all costs", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Costs", DataType = "Double" },
-            new() { Name = "Profit Margin", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Total Cost], [Total Sales])", Description = "Profit margin percentage", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double" },
-            new() { Name = "YTD Sales", Table = "Sales", Expression = "TOTALYTD([Total Sales], 'Date'[Date])", Description = "Year to date sales", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double" },
-            new() { Name = "Previous Year Sales", Table = "Sales", Expression = "CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))", Description = "Sales from previous year", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double" },
-            new() { Name = "Sales Growth %", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Previous Year Sales], [Previous Year Sales])", Description = "Year over year sales growth", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double" },
-            new() { Name = "Customer Count", Table = "Customers", Expression = "DISTINCTCOUNT(Sales[CustomerID])", Description = "Count of unique customers", FormatString = "#,##0", IsHidden = false, DisplayFolder = "Customers", DataType = "Int64" },
-            new() { Name = "Average Order Value", Table = "Sales", Expression = "DIVIDE([Total Sales], COUNTROWS(Sales))", Description = "Average value per order", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double" },
-            new() { Name = "_Helper Measure", Table = "Calculations", Expression = "1", Description = "Internal helper measure", FormatString = "", IsHidden = true, DisplayFolder = "_Internal", DataType = "Int64" },
+            new() { Name = "Total Sales", Table = "Sales", Expression = "SUM(Sales[Amount])", Description = "Sum of all sales amounts", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double", State = "Ready", LineageTag = "a1b2c3d4-e5f6-7890-abcd-ef1234567890", ModifiedTime = DateTime.Now.AddDays(-5) },
+            new() { Name = "Total Cost", Table = "Sales", Expression = "SUM(Sales[Cost])", Description = "Sum of all costs", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Costs", DataType = "Double", State = "Ready", LineageTag = "b2c3d4e5-f6a7-8901-bcde-f12345678901", ModifiedTime = DateTime.Now.AddDays(-3) },
+            new() { Name = "Profit Margin", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Total Cost], [Total Sales])", Description = "Profit margin percentage", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double", KPI = "Profit KPI", State = "Ready", LineageTag = "c3d4e5f6-a7b8-9012-cdef-123456789012", ModifiedTime = DateTime.Now.AddDays(-2) },
+            new() { Name = "YTD Sales", Table = "Sales", Expression = "TOTALYTD([Total Sales], 'Date'[Date])", Description = "Year to date sales", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double", DetailRowsExpression = "SELECTCOLUMNS(Sales, \"Date\", Sales[OrderDate], \"Amount\", Sales[Amount])", State = "Ready", LineageTag = "d4e5f6a7-b8c9-0123-def0-234567890123", ModifiedTime = DateTime.Now.AddDays(-1) },
+            new() { Name = "Previous Year Sales", Table = "Sales", Expression = "CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))", Description = "Sales from previous year", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Time Intelligence", DataType = "Double", State = "Ready", LineageTag = "e5f6a7b8-c9d0-1234-ef01-345678901234", ModifiedTime = DateTime.Now.AddDays(-4) },
+            new() { Name = "Sales Growth %", Table = "Sales", Expression = "DIVIDE([Total Sales] - [Previous Year Sales], [Previous Year Sales])", Description = "Year over year sales growth", FormatString = "0.00%", IsHidden = false, DisplayFolder = "KPIs", DataType = "Double", KPI = "Growth KPI", State = "Ready", LineageTag = "f6a7b8c9-d0e1-2345-f012-456789012345", ModifiedTime = DateTime.Now.AddHours(-6) },
+            new() { Name = "Customer Count", Table = "Customers", Expression = "DISTINCTCOUNT(Sales[CustomerID])", Description = "Count of unique customers", FormatString = "#,##0", IsHidden = false, DisplayFolder = "Customers", DataType = "Int64", State = "Ready", LineageTag = "a7b8c9d0-e1f2-3456-0123-567890123456", ModifiedTime = DateTime.Now.AddHours(-12) },
+            new() { Name = "Average Order Value", Table = "Sales", Expression = "DIVIDE([Total Sales], COUNTROWS(Sales))", Description = "Average value per order", FormatString = "$#,##0.00", IsHidden = false, DisplayFolder = "Revenue", DataType = "Double", State = "Ready", LineageTag = "b8c9d0e1-f2a3-4567-1234-678901234567", ModifiedTime = DateTime.Now.AddHours(-3) },
+            new() { Name = "_Helper Measure", Table = "Calculations", Expression = "1", Description = "Internal helper measure", FormatString = "", IsHidden = true, DisplayFolder = "_Internal", DataType = "Int64", State = "Ready", LineageTag = "c9d0e1f2-a3b4-5678-2345-789012345678", ModifiedTime = DateTime.Now.AddDays(-10) },
+            new() { Name = "Broken Measure", Table = "Sales", Expression = "SUM(NonExistent[Column])", Description = "This measure has an error", FormatString = "", IsHidden = false, DisplayFolder = "Debug", DataType = "Unknown", State = "SemanticError", ErrorMessage = "Column 'NonExistent[Column]' cannot be found", LineageTag = "d0e1f2a3-b4c5-6789-3456-890123456789", ModifiedTime = DateTime.Now.AddHours(-1) },
         };
 
         // Columns
