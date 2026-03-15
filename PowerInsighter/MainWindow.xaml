@@ -1993,31 +1993,628 @@
                         <TextBlock Text="Relationships" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <Grid Margin="10">
+                <Grid Margin="15">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Grid.Row="0" Text="Relationships" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    <!-- Header with Title, Count, Search Bar, and Settings on same row -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Title and Count on the Left -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Relationships" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Border Background="#FFEBEE" CornerRadius="12" Padding="10,4" Margin="15,0,0,0" VerticalAlignment="Center">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#E81123">
+                                    <Run Text="{Binding FilteredRelationships.Count, Mode=OneWay}"/>
+                                    <Run Text=" of "/>
+                                    <Run Text="{Binding Relationships.Count, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- Search Bar on the Right -->
+                        <Border Grid.Column="2" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="8" 
+                                Padding="10,6"
+                                Width="300"
+                                VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" 
+                                           Text="🔍" 
+                                           FontSize="14" 
+                                           VerticalAlignment="Center" 
+                                           Margin="0,0,8,0"/>
+                                
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding RelationshipsSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         BorderThickness="0"
+                                         FontSize="13"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                                <VisualBrush.Visual>
+                                                                    <TextBlock Text="Search relationships..." 
+                                                                              Foreground="#999" 
+                                                                              FontSize="13"/>
+                                                                </VisualBrush.Visual>
+                                                            </VisualBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                
+                                <Button Grid.Column="2" 
+                                        Content="✕" 
+                                        Background="Transparent" 
+                                        BorderThickness="0"
+                                        FontSize="12"
+                                        Foreground="#999"
+                                        Cursor="Hand"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding RelationshipsSearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Command="{Binding ClearRelationshipsSearchCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Settings Button -->
+                        <ToggleButton Grid.Column="3" 
+                                      x:Name="RelationshipsSettingsButton"
+                                      IsChecked="{Binding IsRelationshipsSettingsOpen, Mode=TwoWay}"
+                                      Background="Transparent" 
+                                      BorderThickness="0"
+                                      Cursor="Hand"
+                                      Padding="8,4"
+                                      Margin="10,0,0,0"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Column Settings">
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}"
+                                                        CornerRadius="4">
+                                                    <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter Property="Background" Value="#FFEBEE"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ToggleButton.Style>
+                        </ToggleButton>
+                        
+                        <!-- Export Button -->
+                        <Button Grid.Column="4" 
+                                Command="{Binding ExportRelationshipsCommand}"
+                                Background="Transparent" 
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Padding="8,4"
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Center"
+                                ToolTip="Export to Excel">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="ButtonBorder" 
+                                                        Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}"
+                                                        CornerRadius="4">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="📥" FontSize="16" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Export" FontSize="12" FontWeight="SemiBold" 
+                                                                   Foreground="#E81123" VerticalAlignment="Center" 
+                                                                   Margin="5,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#FFEBEE"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#FFCDD2"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        
+                        <!-- Column Settings Popup -->
+                        <Popup IsOpen="{Binding IsRelationshipsSettingsOpen, Mode=TwoWay}"
+                               PlacementTarget="{Binding ElementName=RelationshipsSettingsButton}"
+                               Placement="Left"
+                               HorizontalOffset="35"
+                               VerticalOffset="30"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               DataContext="{Binding}">
+                            <Border Background="White" 
+                                    BorderBrush="#E0E0E0" 
+                                    BorderThickness="1" 
+                                    CornerRadius="8"
+                                    Padding="12"
+                                    Width="220"
+                                    MaxHeight="500">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2"/>
+                                </Border.Effect>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="Visible Columns" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="13" 
+                                                   Margin="0,0,0,10"
+                                                   Foreground="#333"/>
+                                        
+                                        <!-- Main Columns -->
+                                        <TextBlock Text="Main" FontWeight="SemiBold" FontSize="11" Foreground="#E81123" Margin="0,0,0,5"/>
+                                        <CheckBox Content="Name" IsChecked="{Binding ShowRelNameColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="From Table" IsChecked="{Binding ShowRelFromTableColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="From Column" IsChecked="{Binding ShowRelFromColumnColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="To Table" IsChecked="{Binding ShowRelToTableColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="To Column" IsChecked="{Binding ShowRelToColumnColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Cardinality" IsChecked="{Binding ShowRelCardinalityColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Cross Filter" IsChecked="{Binding ShowRelCrossFilterColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Is Active" IsChecked="{Binding ShowRelIsActiveColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        
+                                        <!-- Advanced Columns -->
+                                        <TextBlock Text="Advanced" FontWeight="SemiBold" FontSize="11" Foreground="#E81123" Margin="0,12,0,5"/>
+                                        <CheckBox Content="From Cardinality" IsChecked="{Binding ShowRelFromCardinalityColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="To Cardinality" IsChecked="{Binding ShowRelToCardinalityColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Security Filter" IsChecked="{Binding ShowRelSecurityFilterColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Join On Date" IsChecked="{Binding ShowRelJoinOnDateColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Rely On Ref. Integrity" IsChecked="{Binding ShowRelRelyOnRefIntColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="State" IsChecked="{Binding ShowRelStateColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Modified Time" IsChecked="{Binding ShowRelModifiedTimeColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
                     
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding Relationships}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              AlternatingRowBackground="#F8F8F8"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="From Table" Binding="{Binding FromTable}" Width="120"/>
-                            <DataGridTextColumn Header="From Column" Binding="{Binding FromColumn}" Width="120"/>
-                            <DataGridTextColumn Header="To Table" Binding="{Binding ToTable}" Width="120"/>
-                            <DataGridTextColumn Header="To Column" Binding="{Binding ToColumn}" Width="120"/>
-                            <DataGridTextColumn Header="Cardinality" Binding="{Binding Cardinality}" Width="120"/>
-                            <DataGridTextColumn Header="Cross Filter" Binding="{Binding CrossFilterDirection}" Width="100"/>
-                            <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="60"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <!-- Modern DataGrid -->
+                    <Border Grid.Row="1" 
+                            Background="White" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="8"
+                            Padding="0">
+                        <DataGrid ItemsSource="{Binding FilteredRelationships}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  RowHeight="48"
+                                  CanUserResizeRows="False"
+                                  CanUserResizeColumns="True"
+                                  SelectionMode="Single"
+                                  SelectionUnit="FullRow"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True">
+                            
+                            <DataGrid.Resources>
+                                <helpers:BindingProxy x:Key="RelProxy" Data="{Binding}"/>
+                                
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Padding" Value="12,0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                            <Setter Property="Foreground" Value="#000"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                                
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#F0F0F0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F8F9FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                                
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#FAFAFA"/>
+                                    <Setter Property="Foreground" Value="#666"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="12,14"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridColumnHeader">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ContentPresenter Grid.Column="0" 
+                                                                          VerticalAlignment="Center"
+                                                                          HorizontalAlignment="Left"/>
+                                                        <Path x:Name="SortArrow" 
+                                                              Grid.Column="1"
+                                                              Visibility="Collapsed"
+                                                              Margin="6,0,0,0"
+                                                              VerticalAlignment="Center"
+                                                              Fill="#666"
+                                                              Data="M 0,0 L 4,4 L 8,0 Z"/>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="SortDirection" Value="Ascending">
+                                                        <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                        <Setter TargetName="SortArrow" Property="Data" Value="M 0,4 L 4,0 L 8,4 Z"/>
+                                                    </Trigger>
+                                                    <Trigger Property="SortDirection" Value="Descending">
+                                                        <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                        <Setter TargetName="SortArrow" Property="Data" Value="M 0,0 L 4,4 L 8,0 Z"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.Resources>
+                            
+                            <DataGrid.Columns>
+                                <!-- S.No Column -->
+                                <DataGridTemplateColumn Header="S.NO" Width="60" MinWidth="50" MaxWidth="80" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="SemiBold" Foreground="#888" HorizontalAlignment="Center">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource RowNumberConverter}">
+                                                        <Binding />
+                                                        <Binding Path="DataContext.FilteredRelationships" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Name Column -->
+                                <DataGridTemplateColumn Header="NAME" Width="150" MinWidth="100" MaxWidth="300" SortMemberPath="Name"
+                                                        Visibility="{Binding Data.ShowRelNameColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Background="#E81123" Width="4" Height="20" CornerRadius="2" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- From Table Column -->
+                                <DataGridTemplateColumn Header="FROM TABLE" Width="130" MinWidth="80" MaxWidth="250" SortMemberPath="FromTable"
+                                                        Visibility="{Binding Data.ShowRelFromTableColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding FromTable}" FontSize="12" Foreground="#1565C0" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- From Column Column -->
+                                <DataGridTemplateColumn Header="FROM COLUMN" Width="120" MinWidth="80" MaxWidth="250" SortMemberPath="FromColumn"
+                                                        Visibility="{Binding Data.ShowRelFromColumnColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FromColumn}" FontSize="12" Foreground="#333"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Arrow/Direction Indicator -->
+                                <DataGridTemplateColumn Header="" Width="40" MinWidth="40" MaxWidth="40" CanUserResize="False">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="→" FontSize="16" FontWeight="Bold" Foreground="#E81123" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- To Table Column -->
+                                <DataGridTemplateColumn Header="TO TABLE" Width="130" MinWidth="80" MaxWidth="250" SortMemberPath="ToTable"
+                                                        Visibility="{Binding Data.ShowRelToTableColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FFF3E0" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding ToTable}" FontSize="12" Foreground="#E65100" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- To Column Column -->
+                                <DataGridTemplateColumn Header="TO COLUMN" Width="120" MinWidth="80" MaxWidth="250" SortMemberPath="ToColumn"
+                                                        Visibility="{Binding Data.ShowRelToColumnColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ToColumn}" FontSize="12" Foreground="#333"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Cardinality Column -->
+                                <DataGridTemplateColumn Header="CARDINALITY" Width="130" MinWidth="100" MaxWidth="200" SortMemberPath="Cardinality"
+                                                        Visibility="{Binding Data.ShowRelCardinalityColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#F3E5F5" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Cardinality}" FontSize="11" Foreground="#7B1FA2" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Cross Filter Column -->
+                                <DataGridTemplateColumn Header="CROSS FILTER" Width="120" MinWidth="90" MaxWidth="200" SortMemberPath="CrossFilterDirection"
+                                                        Visibility="{Binding Data.ShowRelCrossFilterColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding CrossFilterDirection}" Value="Both">
+                                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="{Binding CrossFilterDirection}"/>
+                                                            <Setter Property="Foreground" Value="#2E7D32"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding CrossFilterDirection}" Value="Both">
+                                                                    <Setter Property="Foreground" Value="#1565C0"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Is Active Column -->
+                                <DataGridTemplateColumn Header="STATUS" Width="90" MinWidth="70" MaxWidth="130"
+                                                        Visibility="{Binding Data.ShowRelIsActiveColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                                <Setter Property="Background" Value="#FFF3E0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Active"/>
+                                                            <Setter Property="Foreground" Value="#2E7D32"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                                    <Setter Property="Text" Value="Inactive"/>
+                                                                    <Setter Property="Foreground" Value="#E65100"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- From Cardinality Column (Advanced) -->
+                                <DataGridTemplateColumn Header="FROM CARD." Width="100" MinWidth="70" MaxWidth="150" SortMemberPath="FromCardinality"
+                                                        Visibility="{Binding Data.ShowRelFromCardinalityColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FromCardinality}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- To Cardinality Column (Advanced) -->
+                                <DataGridTemplateColumn Header="TO CARD." Width="100" MinWidth="70" MaxWidth="150" SortMemberPath="ToCardinality"
+                                                        Visibility="{Binding Data.ShowRelToCardinalityColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ToCardinality}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Security Filter Column (Advanced) -->
+                                <DataGridTemplateColumn Header="SECURITY FILTER" Width="130" MinWidth="90" MaxWidth="200" SortMemberPath="SecurityFilteringBehavior"
+                                                        Visibility="{Binding Data.ShowRelSecurityFilterColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding SecurityFilteringBehavior}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Join On Date Column (Advanced) -->
+                                <DataGridTemplateColumn Header="JOIN ON DATE" Width="120" MinWidth="80" MaxWidth="180" SortMemberPath="JoinOnDateBehavior"
+                                                        Visibility="{Binding Data.ShowRelJoinOnDateColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding JoinOnDateBehavior}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Rely On Ref Integrity Column (Advanced) -->
+                                <DataGridTemplateColumn Header="REF. INTEGRITY" Width="110" MinWidth="80" MaxWidth="150"
+                                                        Visibility="{Binding Data.ShowRelRelyOnRefIntColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="11" Foreground="#666" HorizontalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="No"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelyOnReferentialIntegrity}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- State Column (Advanced) -->
+                                <DataGridTemplateColumn Header="STATE" Width="100" MinWidth="70" MaxWidth="150" SortMemberPath="State"
+                                                        Visibility="{Binding Data.ShowRelStateColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding State}" Value="SemanticError">
+                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="{Binding State}"/>
+                                                            <Setter Property="Foreground" Value="#2E7D32"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding State}" Value="SemanticError">
+                                                                    <Setter Property="Foreground" Value="#C62828"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Modified Time Column (Advanced) -->
+                                <DataGridTemplateColumn Header="MODIFIED" Width="140" MinWidth="100" MaxWidth="200" SortMemberPath="ModifiedTime"
+                                                        Visibility="{Binding Data.ShowRelModifiedTimeColumn, Source={StaticResource RelProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🕐" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding ModifiedTime, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#666" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
                 </Grid>
             </TabItem>
             

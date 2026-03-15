@@ -489,13 +489,21 @@ public class PowerBIService : IPowerBIService
                 {
                     relationships.Add(new RelationshipInfo
                     {
+                        Name = scr.Name,
                         FromTable = scr.FromTable.Name,
                         FromColumn = scr.FromColumn.Name,
                         ToTable = scr.ToTable.Name,
                         ToColumn = scr.ToColumn.Name,
                         Cardinality = scr.FromCardinality.ToString() + " to " + scr.ToCardinality.ToString(),
+                        FromCardinality = scr.FromCardinality.ToString(),
+                        ToCardinality = scr.ToCardinality.ToString(),
                         CrossFilterDirection = scr.CrossFilteringBehavior.ToString(),
-                        IsActive = scr.IsActive
+                        SecurityFilteringBehavior = scr.SecurityFilteringBehavior.ToString(),
+                        JoinOnDateBehavior = scr.JoinOnDateBehavior.ToString(),
+                        RelyOnReferentialIntegrity = scr.RelyOnReferentialIntegrity,
+                        IsActive = scr.IsActive,
+                        State = scr.State.ToString(),
+                        ModifiedTime = scr.ModifiedTime
                     });
                 }
             }

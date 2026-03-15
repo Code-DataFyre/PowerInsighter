@@ -79,6 +79,28 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _showColSummarizeByColumn = false;
     private bool _showColEncodingColumn = false;
 
+    // Relationships tab fields
+    private ObservableCollection<RelationshipInfo> _filteredRelationships = [];
+    private string _relationshipsSearchText = string.Empty;
+    private bool _isRelationshipsSettingsOpen;
+    // Relationships column visibility (main - default checked)
+    private bool _showRelNameColumn = true;
+    private bool _showRelFromTableColumn = true;
+    private bool _showRelFromColumnColumn = true;
+    private bool _showRelToTableColumn = true;
+    private bool _showRelToColumnColumn = true;
+    private bool _showRelCardinalityColumn = true;
+    private bool _showRelCrossFilterColumn = true;
+    private bool _showRelIsActiveColumn = true;
+    // Advanced columns (default unchecked)
+    private bool _showRelFromCardinalityColumn = false;
+    private bool _showRelToCardinalityColumn = false;
+    private bool _showRelSecurityFilterColumn = false;
+    private bool _showRelJoinOnDateColumn = false;
+    private bool _showRelRelyOnRefIntColumn = false;
+    private bool _showRelStateColumn = false;
+    private bool _showRelModifiedTimeColumn = false;
+
     // DAX Viewer properties
     private bool _isDaxViewerOpen;
     private string _selectedDaxExpression = string.Empty;
@@ -113,6 +135,7 @@ public class MainViewModel : INotifyPropertyChanged
                 OnPropertyChanged();
                 (ExportMeasuresCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (ExportColumnsCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (ExportRelationshipsCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
@@ -291,9 +314,91 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _relationships = value;
                 OnPropertyChanged();
+                ApplyRelationshipsFilter();
             }
         }
     }
+
+    public ObservableCollection<RelationshipInfo> FilteredRelationships
+    {
+        get => _filteredRelationships;
+        set
+        {
+            if (_filteredRelationships != value)
+            {
+                _filteredRelationships = value;
+                OnPropertyChanged();
+                (ExportRelationshipsCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public string RelationshipsSearchText
+    {
+        get => _relationshipsSearchText;
+        set
+        {
+            if (_relationshipsSearchText != value)
+            {
+                _relationshipsSearchText = value;
+                OnPropertyChanged();
+                ApplyRelationshipsFilter();
+            }
+        }
+    }
+
+    private void ApplyRelationshipsFilter()
+    {
+        if (string.IsNullOrWhiteSpace(RelationshipsSearchText))
+        {
+            FilteredRelationships = new ObservableCollection<RelationshipInfo>(Relationships);
+        }
+        else
+        {
+            var searchLower = RelationshipsSearchText.ToLowerInvariant();
+            var filtered = Relationships.Where(r =>
+                r.Name.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                r.FromTable.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                r.FromColumn.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                r.ToTable.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                r.ToColumn.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                r.Cardinality.Contains(searchLower, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+
+            FilteredRelationships = new ObservableCollection<RelationshipInfo>(filtered);
+        }
+    }
+
+    public bool IsRelationshipsSettingsOpen
+    {
+        get => _isRelationshipsSettingsOpen;
+        set
+        {
+            if (_isRelationshipsSettingsOpen != value)
+            {
+                _isRelationshipsSettingsOpen = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    // Relationships column visibility properties (main)
+    public bool ShowRelNameColumn { get => _showRelNameColumn; set { if (_showRelNameColumn != value) { _showRelNameColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelFromTableColumn { get => _showRelFromTableColumn; set { if (_showRelFromTableColumn != value) { _showRelFromTableColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelFromColumnColumn { get => _showRelFromColumnColumn; set { if (_showRelFromColumnColumn != value) { _showRelFromColumnColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelToTableColumn { get => _showRelToTableColumn; set { if (_showRelToTableColumn != value) { _showRelToTableColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelToColumnColumn { get => _showRelToColumnColumn; set { if (_showRelToColumnColumn != value) { _showRelToColumnColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelCardinalityColumn { get => _showRelCardinalityColumn; set { if (_showRelCardinalityColumn != value) { _showRelCardinalityColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelCrossFilterColumn { get => _showRelCrossFilterColumn; set { if (_showRelCrossFilterColumn != value) { _showRelCrossFilterColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelIsActiveColumn { get => _showRelIsActiveColumn; set { if (_showRelIsActiveColumn != value) { _showRelIsActiveColumn = value; OnPropertyChanged(); } } }
+    // Relationships column visibility properties (advanced)
+    public bool ShowRelFromCardinalityColumn { get => _showRelFromCardinalityColumn; set { if (_showRelFromCardinalityColumn != value) { _showRelFromCardinalityColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelToCardinalityColumn { get => _showRelToCardinalityColumn; set { if (_showRelToCardinalityColumn != value) { _showRelToCardinalityColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelSecurityFilterColumn { get => _showRelSecurityFilterColumn; set { if (_showRelSecurityFilterColumn != value) { _showRelSecurityFilterColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelJoinOnDateColumn { get => _showRelJoinOnDateColumn; set { if (_showRelJoinOnDateColumn != value) { _showRelJoinOnDateColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelRelyOnRefIntColumn { get => _showRelRelyOnRefIntColumn; set { if (_showRelRelyOnRefIntColumn != value) { _showRelRelyOnRefIntColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelStateColumn { get => _showRelStateColumn; set { if (_showRelStateColumn != value) { _showRelStateColumn = value; OnPropertyChanged(); } } }
+    public bool ShowRelModifiedTimeColumn { get => _showRelModifiedTimeColumn; set { if (_showRelModifiedTimeColumn != value) { _showRelModifiedTimeColumn = value; OnPropertyChanged(); } } }
 
     public ObservableCollection<DependencyInfo> Dependencies
     {
@@ -746,6 +851,10 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ExportColumnsCommand { get; }
     public ICommand ViewColumnExpressionCommand { get; }
     public ICommand CopyColumnExpressionCommand { get; }
+    
+    // Relationships tab commands
+    public ICommand ClearRelationshipsSearchCommand { get; }
+    public ICommand ExportRelationshipsCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -764,6 +873,10 @@ public class MainViewModel : INotifyPropertyChanged
         ExportColumnsCommand = new RelayCommand(async () => await ExportColumnsToExcelAsync(), () => IsConnected && FilteredColumns.Count > 0);
         ViewColumnExpressionCommand = new RelayCommandWithParameter(ViewColumnExpression);
         CopyColumnExpressionCommand = new RelayCommandWithParameter(CopyColumnExpression);
+        
+        // Relationships tab commands
+        ClearRelationshipsSearchCommand = new RelayCommand(async () => await Task.Run(() => RelationshipsSearchText = string.Empty), () => true);
+        ExportRelationshipsCommand = new RelayCommand(async () => await ExportRelationshipsToExcelAsync(), () => IsConnected && FilteredRelationships.Count > 0);
     }
 
     private void ViewDax(object? parameter)
@@ -1267,6 +1380,123 @@ public class MainViewModel : INotifyPropertyChanged
         {
             MessageBox.Show(
                 $"Failed to export columns.\n\nError: {ex.Message}",
+                "Export Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Debug.WriteLine($"Export error: {ex}");
+        }
+    }
+
+    private async Task ExportRelationshipsToExcelAsync()
+    {
+        try
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                FileName = $"Relationships_Export_{DateTime.Now:yyyyMMdd_HHmmss}"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                await Task.Run(() =>
+                {
+                    using var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add("Relationships");
+
+                    int col = 1;
+
+                    // S.No column (always visible)
+                    worksheet.Cell(1, col).Value = "S.No";
+                    col++;
+
+                    // Column mappings with visibility
+                    var columnMappings = new List<(string Header, Func<RelationshipInfo, object?> ValueGetter, bool IsVisible)>
+                    {
+                        ("Name", r => r.Name, ShowRelNameColumn),
+                        ("From Table", r => r.FromTable, ShowRelFromTableColumn),
+                        ("From Column", r => r.FromColumn, ShowRelFromColumnColumn),
+                        ("To Table", r => r.ToTable, ShowRelToTableColumn),
+                        ("To Column", r => r.ToColumn, ShowRelToColumnColumn),
+                        ("Cardinality", r => r.Cardinality, ShowRelCardinalityColumn),
+                        ("Cross Filter", r => r.CrossFilterDirection, ShowRelCrossFilterColumn),
+                        ("Is Active", r => r.IsActive ? "Yes" : "No", ShowRelIsActiveColumn),
+                        ("From Cardinality", r => r.FromCardinality, ShowRelFromCardinalityColumn),
+                        ("To Cardinality", r => r.ToCardinality, ShowRelToCardinalityColumn),
+                        ("Security Filter", r => r.SecurityFilteringBehavior, ShowRelSecurityFilterColumn),
+                        ("Join On Date", r => r.JoinOnDateBehavior, ShowRelJoinOnDateColumn),
+                        ("Rely On Ref. Integrity", r => r.RelyOnReferentialIntegrity ? "Yes" : "No", ShowRelRelyOnRefIntColumn),
+                        ("State", r => r.State, ShowRelStateColumn),
+                        ("Modified Time", r => r.ModifiedTime?.ToString("g"), ShowRelModifiedTimeColumn)
+                    };
+
+                    // Add visible column headers
+                    var visibleColumns = columnMappings.Where(c => c.IsVisible).ToList();
+                    foreach (var column in visibleColumns)
+                    {
+                        worksheet.Cell(1, col).Value = column.Header;
+                        col++;
+                    }
+
+                    // Style header row
+                    var headerRange = worksheet.Range(1, 1, 1, 1 + visibleColumns.Count);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E81123");
+                    headerRange.Style.Font.FontColor = XLColor.White;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Add data rows
+                    int row = 2;
+                    int serialNumber = 1;
+                    foreach (var relationship in FilteredRelationships)
+                    {
+                        col = 1;
+
+                        // S.No
+                        worksheet.Cell(row, col).Value = serialNumber++;
+                        col++;
+
+                        // Add visible column values
+                        foreach (var column in visibleColumns)
+                        {
+                            var value = column.ValueGetter(relationship);
+                            if (value != null)
+                            {
+                                worksheet.Cell(row, col).Value = value.ToString();
+                            }
+                            col++;
+                        }
+                        row++;
+                    }
+
+                    // Auto-fit columns with max width
+                    worksheet.Columns().AdjustToContents();
+                    foreach (var column in worksheet.ColumnsUsed())
+                    {
+                        if (column.Width > 50)
+                        {
+                            column.Width = 50;
+                        }
+                    }
+
+                    worksheet.RangeUsed()?.SetAutoFilter();
+                    workbook.SaveAs(saveFileDialog.FileName);
+                });
+
+                MessageBox.Show(
+                    $"Relationships exported successfully to:\n{saveFileDialog.FileName}",
+                    "Export Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                Process.Start("explorer.exe", $"/select,\"{saveFileDialog.FileName}\"");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Failed to export relationships.\n\nError: {ex.Message}",
                 "Export Failed",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
