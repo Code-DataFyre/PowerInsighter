@@ -499,221 +499,6 @@
                             </Border>
                         </Popup>
                         
-                        <!-- DAX Viewer Popup -->
-                        <Popup IsOpen="{Binding IsDaxViewerOpen, Mode=TwoWay}"
-                               Placement="Center"
-                               PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                               StaysOpen="True"
-                               AllowsTransparency="True">
-                            <Border Background="White" 
-                                    BorderBrush="#0078D4" 
-                                    BorderThickness="2" 
-                                    CornerRadius="12"
-                                    Width="700"
-                                    MaxHeight="500">
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="25" ShadowDepth="5" Opacity="0.3"/>
-                                </Border.Effect>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <!-- Header -->
-                                    <Border Grid.Row="0" 
-                                            Background="#0078D4" 
-                                            CornerRadius="10,10,0,0"
-                                            Padding="20,15">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="DAX Expression" 
-                                                           FontSize="18" 
-                                                           FontWeight="Bold" 
-                                                           Foreground="White"/>
-                                                <TextBlock Text="{Binding SelectedMeasureName}" 
-                                                           FontSize="13" 
-                                                           Foreground="#B3FFFFFF"
-                                                           Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Close Button -->
-                                            <Button Grid.Column="1"
-                                                    Command="{Binding CloseDaxViewerCommand}"
-                                                    Background="Transparent"
-                                                    BorderThickness="0"
-                                                    Cursor="Hand"
-                                                    VerticalAlignment="Top">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border x:Name="CloseBorder" 
-                                                                            Background="Transparent" 
-                                                                            CornerRadius="4"
-                                                                            Padding="6">
-                                                                        <TextBlock Text="✕" 
-                                                                                   FontSize="16" 
-                                                                                   FontWeight="Bold"
-                                                                                   Foreground="White"/>
-                                                                    </Border>
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="CloseBorder" Property="Background" Value="#20FFFFFF"/>
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                    
-                                    <!-- DAX Content -->
-                                    <Border Grid.Row="1" 
-                                            Background="#1E1E1E" 
-                                            Padding="0">
-                                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                                                      HorizontalScrollBarVisibility="Auto"
-                                                      Padding="20">
-                                            <TextBox Text="{Binding SelectedDaxExpression, Mode=OneWay}"
-                                                     FontFamily="Consolas"
-                                                     FontSize="14"
-                                                     Foreground="#D4D4D4"
-                                                     Background="Transparent"
-                                                     BorderThickness="0"
-                                                     IsReadOnly="True"
-                                                     TextWrapping="Wrap"
-                                                     AcceptsReturn="True"
-                                                     VerticalScrollBarVisibility="Disabled"/>
-                                        </ScrollViewer>
-                                    </Border>
-                                    
-                                    <!-- Footer with Format and Copy Buttons -->
-                                    <Border Grid.Row="2" 
-                                            Background="#F5F5F5" 
-                                            CornerRadius="0,0,10,10"
-                                            Padding="15,12">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="Press Ctrl+C to copy" 
-                                                           FontSize="12" 
-                                                           Foreground="#666"
-                                                           VerticalAlignment="Center"/>
-                                                <TextBlock Text=" • " 
-                                                           FontSize="12" 
-                                                           Foreground="#999"
-                                                           VerticalAlignment="Center"
-                                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                                <TextBlock Text="Formatting..." 
-                                                           FontSize="12" 
-                                                           Foreground="#0078D4"
-                                                           FontWeight="SemiBold"
-                                                           VerticalAlignment="Center"
-                                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                            
-                                            <!-- Format Button -->
-                                            <Button Grid.Column="1"
-                                                    Command="{Binding FormatDaxCommand}"
-                                                    Cursor="Hand"
-                                                    Margin="0,0,10,0"
-                                                    IsEnabled="{Binding IsFormatting, Converter={StaticResource InverseBooleanConverter}}">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border x:Name="FormatBtnBorder" 
-                                                                            Background="#0078D4" 
-                                                                            CornerRadius="6"
-                                                                            Padding="16,8">
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="✨" FontSize="14" VerticalAlignment="Center"/>
-                                                                            <TextBlock Text="Format" 
-                                                                                       FontSize="13" 
-                                                                                       FontWeight="SemiBold"
-                                                                                       Foreground="White"
-                                                                                       VerticalAlignment="Center"
-                                                                                       Margin="8,0,0,0"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#006CBD"/>
-                                                                        </Trigger>
-                                                                        <Trigger Property="IsPressed" Value="True">
-                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#005A9E"/>
-                                                                        </Trigger>
-                                                                        <Trigger Property="IsEnabled" Value="False">
-                                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#CCCCCC"/>
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                            
-                                            <!-- Copy Button -->
-                                            <Button Grid.Column="2"
-                                                    Command="{Binding CopyDaxCommand}"
-                                                    CommandParameter="{Binding SelectedDaxExpression}"
-                                                    Cursor="Hand">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <Border x:Name="CopyBtnBorder" 
-                                                                            Background="#107C10" 
-                                                                            CornerRadius="6"
-                                                                            Padding="16,8">
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
-                                                                            <TextBlock Text="Copy DAX" 
-                                                                                       FontSize="13" 
-                                                                                       FontWeight="SemiBold"
-                                                                                       Foreground="White"
-                                                                                       VerticalAlignment="Center"
-                                                                                       Margin="8,0,0,0"/>
-                                                                        </StackPanel>
-                                                                    </Border>
-                                                                    <ControlTemplate.Triggers>
-                                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0E6B0E"/>
-                                                                        </Trigger>
-                                                                        <Trigger Property="IsPressed" Value="True">
-                                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0C5A0C"/>
-                                                                        </Trigger>
-                                                                    </ControlTemplate.Triggers>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </Border>
-                        </Popup>
                     </Grid>
                     
                     <!-- Modern DataGrid -->
@@ -1385,30 +1170,818 @@
                         <TextBlock Text="Columns" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <Grid Margin="10">
+                <Grid Margin="15">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Grid.Row="0" Text="Columns" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
+                    <!-- Header with Title, Count, Search Bar, and Settings on same row -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Title and Count on the Left -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Columns" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Border Background="#F3E5F5" CornerRadius="12" Padding="10,4" Margin="15,0,0,0" VerticalAlignment="Center">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#5C2D91">
+                                    <Run Text="{Binding FilteredColumns.Count, Mode=OneWay}"/>
+                                    <Run Text=" of "/>
+                                    <Run Text="{Binding Columns.Count, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- Search Bar on the Right -->
+                        <Border Grid.Column="2" 
+                                Background="White" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="8" 
+                                Padding="10,6"
+                                Width="300"
+                                VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" 
+                                           Text="🔍" 
+                                           FontSize="14" 
+                                           VerticalAlignment="Center" 
+                                           Margin="0,0,8,0"/>
+                                
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding ColumnsSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         BorderThickness="0"
+                                         FontSize="13"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                                <VisualBrush.Visual>
+                                                                    <TextBlock Text="Search columns..." 
+                                                                              Foreground="#999" 
+                                                                              FontSize="13"/>
+                                                                </VisualBrush.Visual>
+                                                            </VisualBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                
+                                <Button Grid.Column="2" 
+                                        Content="✕" 
+                                        Background="Transparent" 
+                                        BorderThickness="0"
+                                        FontSize="12"
+                                        Foreground="#999"
+                                        Cursor="Hand"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding ColumnsSearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Command="{Binding ClearColumnsSearchCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Settings Button -->
+                        <ToggleButton Grid.Column="3" 
+                                      x:Name="ColumnsSettingsButton"
+                                      IsChecked="{Binding IsColumnsSettingsOpen, Mode=TwoWay}"
+                                      Background="Transparent" 
+                                      BorderThickness="0"
+                                      Cursor="Hand"
+                                      Padding="8,4"
+                                      Margin="10,0,0,0"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Column Settings">
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}"
+                                                        CornerRadius="4">
+                                                    <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter Property="Background" Value="#F3E5F5"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ToggleButton.Style>
+                        </ToggleButton>
+                        
+                        <!-- Export Button -->
+                        <Button Grid.Column="4" 
+                                Command="{Binding ExportColumnsCommand}"
+                                Background="Transparent" 
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Padding="8,4"
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Center"
+                                ToolTip="Export to Excel">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="ButtonBorder" 
+                                                        Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}"
+                                                        CornerRadius="4">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="📥" FontSize="16" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Export" FontSize="12" FontWeight="SemiBold" 
+                                                                   Foreground="#5C2D91" VerticalAlignment="Center" 
+                                                                   Margin="5,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#F3E5F5"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#E1BEE7"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        
+                        <!-- Column Settings Popup -->
+                        <Popup IsOpen="{Binding IsColumnsSettingsOpen, Mode=TwoWay}"
+                               PlacementTarget="{Binding ElementName=ColumnsSettingsButton}"
+                               Placement="Left"
+                               HorizontalOffset="35"
+                               VerticalOffset="30"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               DataContext="{Binding}">
+                            <Border Background="White" 
+                                    BorderBrush="#E0E0E0" 
+                                    BorderThickness="1" 
+                                    CornerRadius="8"
+                                    Padding="12"
+                                    Width="220"
+                                    MaxHeight="500">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2"/>
+                                </Border.Effect>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="Visible Columns" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="13" 
+                                                   Margin="0,0,0,10"
+                                                   Foreground="#333"/>
+                                        
+                                        <!-- Main Columns -->
+                                        <TextBlock Text="Main" FontWeight="SemiBold" FontSize="11" Foreground="#5C2D91" Margin="0,0,0,5"/>
+                                        <CheckBox Content="Name" IsChecked="{Binding ShowColNameColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Table" IsChecked="{Binding ShowColTableColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Data Type" IsChecked="{Binding ShowColDataTypeColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Is Calculated" IsChecked="{Binding ShowColIsCalculatedColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Expression" IsChecked="{Binding ShowColExpressionColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Visibility" IsChecked="{Binding ShowColIsHiddenColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Description" IsChecked="{Binding ShowColDescriptionColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Display Folder" IsChecked="{Binding ShowColDisplayFolderColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Format String" IsChecked="{Binding ShowColFormatStringColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        
+                                        <!-- Advanced Columns -->
+                                        <TextBlock Text="Advanced" FontWeight="SemiBold" FontSize="11" Foreground="#5C2D91" Margin="0,12,0,5"/>
+                                        <CheckBox Content="Sort By Column" IsChecked="{Binding ShowColSortByColumnColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Is Unique" IsChecked="{Binding ShowColIsUniqueColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Is Nullable" IsChecked="{Binding ShowColIsNullableColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Is Key" IsChecked="{Binding ShowColIsKeyColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Source Column" IsChecked="{Binding ShowColSourceColumnColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Data Category" IsChecked="{Binding ShowColDataCategoryColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Available In MDX" IsChecked="{Binding ShowColIsAvailableInMDXColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="State" IsChecked="{Binding ShowColStateColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Error Message" IsChecked="{Binding ShowColErrorMessageColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Modified Time" IsChecked="{Binding ShowColModifiedTimeColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Lineage Tag" IsChecked="{Binding ShowColLineageTagColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Summarize By" IsChecked="{Binding ShowColSummarizeByColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                        <CheckBox Content="Encoding" IsChecked="{Binding ShowColEncodingColumn, Mode=TwoWay}" Margin="0,3" FontSize="12"/>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
                     
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding Columns}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              AlternatingRowBackground="#F8F8F8"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
-                            <DataGridTextColumn Header="Table" Binding="{Binding Table}" Width="120"/>
-                            <DataGridTextColumn Header="Data Type" Binding="{Binding DataType}" Width="100"/>
-                            <DataGridCheckBoxColumn Header="Calculated" Binding="{Binding IsCalculated}" Width="80"/>
-                            <DataGridTextColumn Header="Expression" Binding="{Binding Expression}" Width="*"/>
-                            <DataGridCheckBoxColumn Header="Hidden" Binding="{Binding IsHidden}" Width="60"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <!-- Modern DataGrid -->
+                    <Border Grid.Row="1" 
+                            Background="White" 
+                            BorderBrush="#E0E0E0" 
+                            BorderThickness="1" 
+                            CornerRadius="8"
+                            Padding="0">
+                        <DataGrid ItemsSource="{Binding FilteredColumns}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  RowHeight="48"
+                                  CanUserResizeRows="False"
+                                  CanUserResizeColumns="True"
+                                  SelectionMode="Single"
+                                  SelectionUnit="FullRow"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True">
+                            
+                            <DataGrid.Resources>
+                                <helpers:BindingProxy x:Key="ColProxy" Data="{Binding}"/>
+                                
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Padding" Value="12,0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#F3E5F5"/>
+                                            <Setter Property="Foreground" Value="#000"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                                
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#F0F0F0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F8F9FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#F3E5F5"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                                
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#FAFAFA"/>
+                                    <Setter Property="Foreground" Value="#666"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="12,14"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridColumnHeader">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ContentPresenter Grid.Column="0" 
+                                                                          VerticalAlignment="Center"
+                                                                          HorizontalAlignment="Left"/>
+                                                        <Path x:Name="SortArrow" 
+                                                              Grid.Column="1"
+                                                              Visibility="Collapsed"
+                                                              Margin="6,0,0,0"
+                                                              VerticalAlignment="Center"
+                                                              Fill="#666"
+                                                              Data="M 0,0 L 4,4 L 8,0 Z"/>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="SortDirection" Value="Ascending">
+                                                        <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                        <Setter TargetName="SortArrow" Property="Data" Value="M 0,4 L 4,0 L 8,4 Z"/>
+                                                    </Trigger>
+                                                    <Trigger Property="SortDirection" Value="Descending">
+                                                        <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                                        <Setter TargetName="SortArrow" Property="Data" Value="M 0,0 L 4,4 L 8,0 Z"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.Resources>
+                            
+                            <DataGrid.Columns>
+                                <!-- S.No Column -->
+                                <DataGridTemplateColumn Header="S.NO" Width="60" MinWidth="50" MaxWidth="80" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="SemiBold" Foreground="#888" HorizontalAlignment="Center">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource RowNumberConverter}">
+                                                        <Binding />
+                                                        <Binding Path="DataContext.FilteredColumns" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Name Column -->
+                                <DataGridTemplateColumn Header="NAME" Width="180" MinWidth="100" MaxWidth="400" SortMemberPath="Name"
+                                                        Visibility="{Binding Data.ShowColNameColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Background="#5C2D91" Width="4" Height="20" CornerRadius="2" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Table Column -->
+                                <DataGridTemplateColumn Header="TABLE" Width="130" MinWidth="80" MaxWidth="300" SortMemberPath="Table"
+                                                        Visibility="{Binding Data.ShowColTableColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#F0F0F0" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Table}" FontSize="12" Foreground="#666"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Data Type Column -->
+                                <DataGridTemplateColumn Header="DATA TYPE" Width="100" MinWidth="70" MaxWidth="200" SortMemberPath="DataType"
+                                                        Visibility="{Binding Data.ShowColDataTypeColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E3F2FD" CornerRadius="4" Padding="6,3" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding DataType}" FontSize="11" Foreground="#1565C0" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Is Calculated Column -->
+                                <DataGridTemplateColumn Header="CALCULATED" Width="100" MinWidth="80" MaxWidth="150"
+                                                        Visibility="{Binding Data.ShowColIsCalculatedColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#F5F5F5"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCalculated}" Value="True">
+                                                                <Setter Property="Background" Value="#FFF3E0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="No"/>
+                                                            <Setter Property="Foreground" Value="#888"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCalculated}" Value="True">
+                                                                    <Setter Property="Text" Value="Yes"/>
+                                                                    <Setter Property="Foreground" Value="#E65100"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Expression Column -->
+                                <DataGridTemplateColumn Header="EXPRESSION" Width="350" MinWidth="200" MaxWidth="800" SortMemberPath="Expression"
+                                                        Visibility="{Binding Data.ShowColExpressionColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Expression}" 
+                                                           FontFamily="Consolas" 
+                                                           FontSize="12" 
+                                                           Foreground="#5C2D91"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           ToolTip="{Binding Expression}"/>
+                                                
+                                                <!-- Action Buttons (only visible when there's an expression) -->
+                                                <StackPanel Grid.Column="1" 
+                                                            Orientation="Horizontal" 
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{Binding Expression, Converter={StaticResource StringToVisibilityConverter}}">
+                                                    <!-- View Expression Button -->
+                                                    <Button Command="{Binding DataContext.ViewColumnExpressionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Padding="4"
+                                                            ToolTip="View Expression"
+                                                            Margin="0,0,4,0">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="BtnBorder" Background="Transparent" CornerRadius="4" Padding="4">
+                                                                                <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#F3E5F5"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsPressed" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#E1BEE7"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    
+                                                    <!-- Copy Expression Button -->
+                                                    <Button Command="{Binding DataContext.CopyColumnExpressionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Cursor="Hand"
+                                                            Padding="4"
+                                                            ToolTip="Copy Expression">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="BtnBorder" Background="Transparent" CornerRadius="4" Padding="4">
+                                                                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#E8F5E9"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsPressed" Value="True">
+                                                                                    <Setter TargetName="BtnBorder" Property="Background" Value="#C8E6C9"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Visibility Column -->
+                                <DataGridTemplateColumn Header="VISIBILITY" Width="90" MinWidth="70" MaxWidth="150"
+                                                        Visibility="{Binding Data.ShowColIsHiddenColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                                                <Setter Property="Background" Value="#FFF3E0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Visible"/>
+                                                            <Setter Property="Foreground" Value="#2E7D32"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                                                    <Setter Property="Text" Value="Hidden"/>
+                                                                    <Setter Property="Foreground" Value="#E65100"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Description Column -->
+                                <DataGridTemplateColumn Header="DESCRIPTION" Width="180" MinWidth="100" MaxWidth="500" SortMemberPath="Description"
+                                                        Visibility="{Binding Data.ShowColDescriptionColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Description}" FontSize="12" Foreground="#666" TextTrimming="CharacterEllipsis" ToolTip="{Binding Description}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Display Folder Column -->
+                                <DataGridTemplateColumn Header="FOLDER" Width="120" MinWidth="80" MaxWidth="300" SortMemberPath="DisplayFolder"
+                                                        Visibility="{Binding Data.ShowColDisplayFolderColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="📁" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DisplayFolder}" FontSize="12" Foreground="#666" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Format String Column -->
+                                <DataGridTemplateColumn Header="FORMAT" Width="100" MinWidth="60" MaxWidth="200" SortMemberPath="FormatString"
+                                                        Visibility="{Binding Data.ShowColFormatStringColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FormatString}" FontFamily="Consolas" FontSize="11" Foreground="#888"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Sort By Column -->
+                                <DataGridTemplateColumn Header="SORT BY" Width="120" MinWidth="80" MaxWidth="250" SortMemberPath="SortByColumn"
+                                                        Visibility="{Binding Data.ShowColSortByColumnColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding SortByColumn}" FontSize="12" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Is Unique Column -->
+                                <DataGridTemplateColumn Header="UNIQUE" Width="80" MinWidth="60" MaxWidth="120"
+                                                        Visibility="{Binding Data.ShowColIsUniqueColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="11" Foreground="#666" HorizontalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="No"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsUnique}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Is Nullable Column -->
+                                <DataGridTemplateColumn Header="NULLABLE" Width="80" MinWidth="60" MaxWidth="120"
+                                                        Visibility="{Binding Data.ShowColIsNullableColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="11" Foreground="#666" HorizontalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="No"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsNullable}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Is Key Column -->
+                                <DataGridTemplateColumn Header="KEY" Width="70" MinWidth="50" MaxWidth="100"
+                                                        Visibility="{Binding Data.ShowColIsKeyColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center"
+                                                    Visibility="{Binding IsKey, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#FFF8E1"/>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="🔑" FontSize="12"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Source Column -->
+                                <DataGridTemplateColumn Header="SOURCE" Width="150" MinWidth="80" MaxWidth="300" SortMemberPath="SourceColumn"
+                                                        Visibility="{Binding Data.ShowColSourceColumnColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding SourceColumn}" FontFamily="Consolas" FontSize="11" Foreground="#666" TextTrimming="CharacterEllipsis" ToolTip="{Binding SourceColumn}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Data Category Column -->
+                                <DataGridTemplateColumn Header="CATEGORY" Width="100" MinWidth="70" MaxWidth="200" SortMemberPath="DataCategory"
+                                                        Visibility="{Binding Data.ShowColDataCategoryColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DataCategory}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Available In MDX Column -->
+                                <DataGridTemplateColumn Header="IN MDX" Width="80" MinWidth="60" MaxWidth="120"
+                                                        Visibility="{Binding Data.ShowColIsAvailableInMDXColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="11" Foreground="#666" HorizontalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="No"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsAvailableInMDX}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- State Column -->
+                                <DataGridTemplateColumn Header="STATE" Width="100" MinWidth="70" MaxWidth="200" SortMemberPath="State"
+                                                        Visibility="{Binding Data.ShowColStateColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#E8F5E9"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding State}" Value="SemanticError">
+                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding State}" Value="NoData">
+                                                                <Setter Property="Background" Value="#FFF3E0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="{Binding State}"/>
+                                                            <Setter Property="Foreground" Value="#2E7D32"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding State}" Value="SemanticError">
+                                                                    <Setter Property="Foreground" Value="#C62828"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding State}" Value="NoData">
+                                                                    <Setter Property="Foreground" Value="#EF6C00"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Error Message Column -->
+                                <DataGridTemplateColumn Header="ERROR" Width="200" MinWidth="100" MaxWidth="500" SortMemberPath="ErrorMessage"
+                                                        Visibility="{Binding Data.ShowColErrorMessageColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ErrorMessage}" FontSize="11" Foreground="#C62828" TextTrimming="CharacterEllipsis" ToolTip="{Binding ErrorMessage}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Modified Time Column -->
+                                <DataGridTemplateColumn Header="MODIFIED" Width="140" MinWidth="100" MaxWidth="250" SortMemberPath="ModifiedTime"
+                                                        Visibility="{Binding Data.ShowColModifiedTimeColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🕐" FontSize="11" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding ModifiedTime, StringFormat='{}{0:g}'}" FontSize="11" Foreground="#666" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Lineage Tag Column -->
+                                <DataGridTemplateColumn Header="LINEAGE TAG" Width="150" MinWidth="80" MaxWidth="400" SortMemberPath="LineageTag"
+                                                        Visibility="{Binding Data.ShowColLineageTagColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding LineageTag}" FontFamily="Consolas" FontSize="10" Foreground="#888" TextTrimming="CharacterEllipsis" ToolTip="{Binding LineageTag}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Summarize By Column -->
+                                <DataGridTemplateColumn Header="SUMMARIZE" Width="100" MinWidth="70" MaxWidth="200" SortMemberPath="SummarizeBy"
+                                                        Visibility="{Binding Data.ShowColSummarizeByColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding SummarizeBy}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Encoding Column -->
+                                <DataGridTemplateColumn Header="ENCODING" Width="100" MinWidth="70" MaxWidth="200" SortMemberPath="Encoding"
+                                                        Visibility="{Binding Data.ShowColEncodingColumn, Source={StaticResource ColProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Encoding}" FontSize="11" Foreground="#666"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
                 </Grid>
             </TabItem>
             
@@ -1604,5 +2177,221 @@
                 </StackPanel>
             </StackPanel>
         </Border>
+        
+        <!-- DAX Viewer Popup (Global - works from any tab) -->
+        <Popup IsOpen="{Binding IsDaxViewerOpen, Mode=TwoWay}"
+               Placement="Center"
+               PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+               StaysOpen="True"
+               AllowsTransparency="True">
+            <Border Background="White" 
+                    BorderBrush="#0078D4" 
+                    BorderThickness="2" 
+                    CornerRadius="12"
+                    Width="700"
+                    MaxHeight="500">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" ShadowDepth="5" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Header -->
+                    <Border Grid.Row="0" 
+                            Background="#0078D4" 
+                            CornerRadius="10,10,0,0"
+                            Padding="20,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="DAX Expression" 
+                                           FontSize="18" 
+                                           FontWeight="Bold" 
+                                           Foreground="White"/>
+                                <TextBlock Text="{Binding SelectedMeasureName}" 
+                                           FontSize="13" 
+                                           Foreground="#B3FFFFFF"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                            
+                            <!-- Close Button -->
+                            <Button Grid.Column="1"
+                                    Command="{Binding CloseDaxViewerCommand}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    VerticalAlignment="Top">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="CloseBorder" 
+                                                            Background="Transparent" 
+                                                            CornerRadius="4"
+                                                            Padding="6">
+                                                        <TextBlock Text="✕" 
+                                                                   FontSize="16" 
+                                                                   FontWeight="Bold"
+                                                                   Foreground="White"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="CloseBorder" Property="Background" Value="#20FFFFFF"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- DAX Content -->
+                    <Border Grid.Row="1" 
+                            Background="#1E1E1E" 
+                            Padding="0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                      HorizontalScrollBarVisibility="Auto"
+                                      Padding="20">
+                            <TextBox Text="{Binding SelectedDaxExpression, Mode=OneWay}"
+                                     FontFamily="Consolas"
+                                     FontSize="14"
+                                     Foreground="#D4D4D4"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Disabled"/>
+                        </ScrollViewer>
+                    </Border>
+                    
+                    <!-- Footer with Format and Copy Buttons -->
+                    <Border Grid.Row="2" 
+                            Background="#F5F5F5" 
+                            CornerRadius="0,0,10,10"
+                            Padding="15,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Press Ctrl+C to copy" 
+                                           FontSize="12" 
+                                           Foreground="#666"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text=" • " 
+                                           FontSize="12" 
+                                           Foreground="#999"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                <TextBlock Text="Formatting..." 
+                                           FontSize="12" 
+                                           Foreground="#0078D4"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           Visibility="{Binding IsFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            </StackPanel>
+                            
+                            <!-- Format Button -->
+                            <Button Grid.Column="1"
+                                    Command="{Binding FormatDaxCommand}"
+                                    Cursor="Hand"
+                                    Margin="0,0,10,0"
+                                    IsEnabled="{Binding IsFormatting, Converter={StaticResource InverseBooleanConverter}}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="FormatBtnBorder" 
+                                                            Background="#0078D4" 
+                                                            CornerRadius="6"
+                                                            Padding="16,8">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="✨" FontSize="14" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Format" 
+                                                                       FontSize="13" 
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="8,0,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#006CBD"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#005A9E"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter TargetName="FormatBtnBorder" Property="Background" Value="#CCCCCC"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            
+                            <!-- Copy Button -->
+                            <Button Grid.Column="2"
+                                    Command="{Binding CopyDaxCommand}"
+                                    CommandParameter="{Binding SelectedDaxExpression}"
+                                    Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="CopyBtnBorder" 
+                                                            Background="#107C10" 
+                                                            CornerRadius="6"
+                                                            Padding="16,8">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Copy DAX" 
+                                                                       FontSize="13" 
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="White"
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="8,0,0,0"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0E6B0E"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed" Value="True">
+                                                            <Setter TargetName="CopyBtnBorder" Property="Background" Value="#0C5A0C"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Popup>
     </Grid>
 </Window>

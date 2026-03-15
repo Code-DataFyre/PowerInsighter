@@ -419,6 +419,21 @@ public class PowerBIService : IPowerBIService
                         expression = calcCol.Expression;
                     }
 
+                    // Get SortByColumn name if set
+                    string? sortByColumnName = null;
+                    try
+                    {
+                        sortByColumnName = column.SortByColumn?.Name;
+                    }
+                    catch { /* May not be available */ }
+
+                    // Get SourceColumn for DataColumns
+                    string? sourceColumn = null;
+                    if (column is DataColumn dataCol)
+                    {
+                        sourceColumn = dataCol.SourceColumn;
+                    }
+
                     columns.Add(new ColumnInfo
                     {
                         Name = column.Name,
@@ -427,7 +442,22 @@ public class PowerBIService : IPowerBIService
                         IsCalculated = isCalculated,
                         Expression = expression,
                         IsHidden = column.IsHidden,
-                        Description = column.Description
+                        Description = column.Description,
+                        DisplayFolder = column.DisplayFolder,
+                        FormatString = column.FormatString,
+                        SortByColumn = sortByColumnName,
+                        IsUnique = column.IsUnique,
+                        IsNullable = column.IsNullable,
+                        IsKey = column.IsKey,
+                        SourceColumn = sourceColumn,
+                        DataCategory = column.DataCategory,
+                        IsAvailableInMDX = column.IsAvailableInMDX,
+                        State = column.State.ToString(),
+                        ErrorMessage = column.ErrorMessage,
+                        ModifiedTime = column.ModifiedTime,
+                        LineageTag = column.LineageTag,
+                        SummarizeBy = column.SummarizeBy.ToString(),
+                        Encoding = column.EncodingHint.ToString()
                     });
                 }
             }

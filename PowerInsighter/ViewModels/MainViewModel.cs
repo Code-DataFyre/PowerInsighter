@@ -27,6 +27,8 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<MeasureInfo> _filteredMeasures = [];
     private string _measuresSearchText = string.Empty;
     private ObservableCollection<ColumnInfo> _columns = [];
+    private ObservableCollection<ColumnInfo> _filteredColumns = [];
+    private string _columnsSearchText = string.Empty;
     private ObservableCollection<RelationshipInfo> _relationships = [];
     private ObservableCollection<DependencyInfo> _dependencies = [];
     private ObservableCollection<UnusedObjectInfo> _unusedObjects = [];
@@ -50,6 +52,32 @@ public class MainViewModel : INotifyPropertyChanged
     private bool _showErrorMessageColumn = false;
     private bool _showLineageTagColumn = false;
     private bool _showModifiedTimeColumn = false;
+
+    // Columns tab column visibility settings
+    private bool _isColumnsSettingsOpen;
+    private bool _showColNameColumn = true;
+    private bool _showColTableColumn = true;
+    private bool _showColDataTypeColumn = true;
+    private bool _showColIsCalculatedColumn = true;
+    private bool _showColExpressionColumn = true;
+    private bool _showColIsHiddenColumn = true;
+    private bool _showColDescriptionColumn = true;
+    private bool _showColDisplayFolderColumn = true;
+    private bool _showColFormatStringColumn = true;
+    // Advanced columns (default unchecked)
+    private bool _showColSortByColumnColumn = false;
+    private bool _showColIsUniqueColumn = false;
+    private bool _showColIsNullableColumn = false;
+    private bool _showColIsKeyColumn = false;
+    private bool _showColSourceColumnColumn = false;
+    private bool _showColDataCategoryColumn = false;
+    private bool _showColIsAvailableInMDXColumn = false;
+    private bool _showColStateColumn = false;
+    private bool _showColErrorMessageColumn = false;
+    private bool _showColModifiedTimeColumn = false;
+    private bool _showColLineageTagColumn = false;
+    private bool _showColSummarizeByColumn = false;
+    private bool _showColEncodingColumn = false;
 
     // DAX Viewer properties
     private bool _isDaxViewerOpen;
@@ -84,6 +112,7 @@ public class MainViewModel : INotifyPropertyChanged
                 _isConnected = value;
                 OnPropertyChanged();
                 (ExportMeasuresCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (ExportColumnsCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
     }
@@ -199,7 +228,57 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _columns = value;
                 OnPropertyChanged();
+                ApplyColumnsFilter();
             }
+        }
+    }
+
+    public ObservableCollection<ColumnInfo> FilteredColumns
+    {
+        get => _filteredColumns;
+        set
+        {
+            if (_filteredColumns != value)
+            {
+                _filteredColumns = value;
+                OnPropertyChanged();
+                (ExportColumnsCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public string ColumnsSearchText
+    {
+        get => _columnsSearchText;
+        set
+        {
+            if (_columnsSearchText != value)
+            {
+                _columnsSearchText = value;
+                OnPropertyChanged();
+                ApplyColumnsFilter();
+            }
+        }
+    }
+
+    private void ApplyColumnsFilter()
+    {
+        if (string.IsNullOrWhiteSpace(ColumnsSearchText))
+        {
+            FilteredColumns = new ObservableCollection<ColumnInfo>(Columns);
+        }
+        else
+        {
+            var searchLower = ColumnsSearchText.ToLowerInvariant();
+            var filtered = Columns.Where(c =>
+                c.Name.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                c.Table.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                c.DataType.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ||
+                (c.Expression?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (c.Description?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false)
+            ).ToList();
+
+            FilteredColumns = new ObservableCollection<ColumnInfo>(filtered);
         }
     }
 
@@ -452,6 +531,152 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // Columns Tab Column Visibility Properties
+    public bool IsColumnsSettingsOpen
+    {
+        get => _isColumnsSettingsOpen;
+        set
+        {
+            if (_isColumnsSettingsOpen != value)
+            {
+                _isColumnsSettingsOpen = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowColNameColumn
+    {
+        get => _showColNameColumn;
+        set { if (_showColNameColumn != value) { _showColNameColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColTableColumn
+    {
+        get => _showColTableColumn;
+        set { if (_showColTableColumn != value) { _showColTableColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColDataTypeColumn
+    {
+        get => _showColDataTypeColumn;
+        set { if (_showColDataTypeColumn != value) { _showColDataTypeColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsCalculatedColumn
+    {
+        get => _showColIsCalculatedColumn;
+        set { if (_showColIsCalculatedColumn != value) { _showColIsCalculatedColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColExpressionColumn
+    {
+        get => _showColExpressionColumn;
+        set { if (_showColExpressionColumn != value) { _showColExpressionColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsHiddenColumn
+    {
+        get => _showColIsHiddenColumn;
+        set { if (_showColIsHiddenColumn != value) { _showColIsHiddenColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColDescriptionColumn
+    {
+        get => _showColDescriptionColumn;
+        set { if (_showColDescriptionColumn != value) { _showColDescriptionColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColDisplayFolderColumn
+    {
+        get => _showColDisplayFolderColumn;
+        set { if (_showColDisplayFolderColumn != value) { _showColDisplayFolderColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColFormatStringColumn
+    {
+        get => _showColFormatStringColumn;
+        set { if (_showColFormatStringColumn != value) { _showColFormatStringColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColSortByColumnColumn
+    {
+        get => _showColSortByColumnColumn;
+        set { if (_showColSortByColumnColumn != value) { _showColSortByColumnColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsUniqueColumn
+    {
+        get => _showColIsUniqueColumn;
+        set { if (_showColIsUniqueColumn != value) { _showColIsUniqueColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsNullableColumn
+    {
+        get => _showColIsNullableColumn;
+        set { if (_showColIsNullableColumn != value) { _showColIsNullableColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsKeyColumn
+    {
+        get => _showColIsKeyColumn;
+        set { if (_showColIsKeyColumn != value) { _showColIsKeyColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColSourceColumnColumn
+    {
+        get => _showColSourceColumnColumn;
+        set { if (_showColSourceColumnColumn != value) { _showColSourceColumnColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColDataCategoryColumn
+    {
+        get => _showColDataCategoryColumn;
+        set { if (_showColDataCategoryColumn != value) { _showColDataCategoryColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColIsAvailableInMDXColumn
+    {
+        get => _showColIsAvailableInMDXColumn;
+        set { if (_showColIsAvailableInMDXColumn != value) { _showColIsAvailableInMDXColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColStateColumn
+    {
+        get => _showColStateColumn;
+        set { if (_showColStateColumn != value) { _showColStateColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColErrorMessageColumn
+    {
+        get => _showColErrorMessageColumn;
+        set { if (_showColErrorMessageColumn != value) { _showColErrorMessageColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColModifiedTimeColumn
+    {
+        get => _showColModifiedTimeColumn;
+        set { if (_showColModifiedTimeColumn != value) { _showColModifiedTimeColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColLineageTagColumn
+    {
+        get => _showColLineageTagColumn;
+        set { if (_showColLineageTagColumn != value) { _showColLineageTagColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColSummarizeByColumn
+    {
+        get => _showColSummarizeByColumn;
+        set { if (_showColSummarizeByColumn != value) { _showColSummarizeByColumn = value; OnPropertyChanged(); } }
+    }
+
+    public bool ShowColEncodingColumn
+    {
+        get => _showColEncodingColumn;
+        set { if (_showColEncodingColumn != value) { _showColEncodingColumn = value; OnPropertyChanged(); } }
+    }
+
     // DAX Viewer Properties
     public bool IsDaxViewerOpen
     {
@@ -515,6 +740,12 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand CopyDaxCommand { get; }
     public ICommand CloseDaxViewerCommand { get; }
     public ICommand FormatDaxCommand { get; }
+    
+    // Columns tab commands
+    public ICommand ClearColumnsSearchCommand { get; }
+    public ICommand ExportColumnsCommand { get; }
+    public ICommand ViewColumnExpressionCommand { get; }
+    public ICommand CopyColumnExpressionCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -527,6 +758,12 @@ public class MainViewModel : INotifyPropertyChanged
         CopyDaxCommand = new RelayCommandWithParameter(CopyDax);
         CloseDaxViewerCommand = new RelayCommand(async () => await Task.Run(() => IsDaxViewerOpen = false), () => true);
         FormatDaxCommand = new RelayCommand(async () => await FormatDaxAsync(), () => !IsFormatting && !string.IsNullOrEmpty(SelectedDaxExpression));
+        
+        // Columns tab commands
+        ClearColumnsSearchCommand = new RelayCommand(async () => await Task.Run(() => ColumnsSearchText = string.Empty), () => true);
+        ExportColumnsCommand = new RelayCommand(async () => await ExportColumnsToExcelAsync(), () => IsConnected && FilteredColumns.Count > 0);
+        ViewColumnExpressionCommand = new RelayCommandWithParameter(ViewColumnExpression);
+        CopyColumnExpressionCommand = new RelayCommandWithParameter(CopyColumnExpression);
     }
 
     private void ViewDax(object? parameter)
@@ -591,6 +828,44 @@ public class MainViewModel : INotifyPropertyChanged
         finally
         {
             IsFormatting = false;
+        }
+    }
+
+    private void ViewColumnExpression(object? parameter)
+    {
+        if (parameter is ColumnInfo column && !string.IsNullOrEmpty(column.Expression))
+        {
+            SelectedMeasureName = $"{column.Table}[{column.Name}]";
+            SelectedDaxExpression = column.Expression;
+            IsDaxViewerOpen = true;
+        }
+    }
+
+    private void CopyColumnExpression(object? parameter)
+    {
+        string? expression = null;
+        
+        if (parameter is ColumnInfo column)
+        {
+            expression = column.Expression;
+        }
+        else if (parameter is string str)
+        {
+            expression = str;
+        }
+        
+        if (!string.IsNullOrEmpty(expression))
+        {
+            try
+            {
+                Clipboard.SetText(expression);
+                StatusMessage = "? Column expression copied to clipboard!";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Copy error: {ex}");
+                StatusMessage = "Failed to copy to clipboard.";
+            }
         }
     }
 
@@ -868,6 +1143,130 @@ public class MainViewModel : INotifyPropertyChanged
         {
             MessageBox.Show(
                 $"Failed to export measures.\n\nError: {ex.Message}",
+                "Export Failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Debug.WriteLine($"Export error: {ex}");
+        }
+    }
+
+    private async Task ExportColumnsToExcelAsync()
+    {
+        try
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                FileName = $"Columns_Export_{DateTime.Now:yyyyMMdd_HHmmss}"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                await Task.Run(() =>
+                {
+                    using var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add("Columns");
+
+                    int col = 1;
+
+                    // S.No column (always visible)
+                    worksheet.Cell(1, col).Value = "S.No";
+                    col++;
+
+                    // Column mappings with visibility
+                    var columnMappings = new List<(string Header, Func<ColumnInfo, object?> ValueGetter, bool IsVisible)>
+                    {
+                        ("Name", c => c.Name, ShowColNameColumn),
+                        ("Table", c => c.Table, ShowColTableColumn),
+                        ("Data Type", c => c.DataType, ShowColDataTypeColumn),
+                        ("Is Calculated", c => c.IsCalculated ? "Yes" : "No", ShowColIsCalculatedColumn),
+                        ("Expression", c => c.Expression, ShowColExpressionColumn),
+                        ("Is Hidden", c => c.IsHidden ? "Hidden" : "Visible", ShowColIsHiddenColumn),
+                        ("Description", c => c.Description, ShowColDescriptionColumn),
+                        ("Display Folder", c => c.DisplayFolder, ShowColDisplayFolderColumn),
+                        ("Format String", c => c.FormatString, ShowColFormatStringColumn),
+                        ("Sort By Column", c => c.SortByColumn, ShowColSortByColumnColumn),
+                        ("Is Unique", c => c.IsUnique ? "Yes" : "No", ShowColIsUniqueColumn),
+                        ("Is Nullable", c => c.IsNullable ? "Yes" : "No", ShowColIsNullableColumn),
+                        ("Is Key", c => c.IsKey ? "Yes" : "No", ShowColIsKeyColumn),
+                        ("Source Column", c => c.SourceColumn, ShowColSourceColumnColumn),
+                        ("Data Category", c => c.DataCategory, ShowColDataCategoryColumn),
+                        ("Available In MDX", c => c.IsAvailableInMDX ? "Yes" : "No", ShowColIsAvailableInMDXColumn),
+                        ("State", c => c.State, ShowColStateColumn),
+                        ("Error Message", c => c.ErrorMessage, ShowColErrorMessageColumn),
+                        ("Modified Time", c => c.ModifiedTime?.ToString("g"), ShowColModifiedTimeColumn),
+                        ("Lineage Tag", c => c.LineageTag, ShowColLineageTagColumn),
+                        ("Summarize By", c => c.SummarizeBy, ShowColSummarizeByColumn),
+                        ("Encoding", c => c.Encoding, ShowColEncodingColumn)
+                    };
+
+                    // Add visible column headers
+                    var visibleColumns = columnMappings.Where(c => c.IsVisible).ToList();
+                    foreach (var column in visibleColumns)
+                    {
+                        worksheet.Cell(1, col).Value = column.Header;
+                        col++;
+                    }
+
+                    // Style header row
+                    var headerRange = worksheet.Range(1, 1, 1, 1 + visibleColumns.Count);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#5C2D91");
+                    headerRange.Style.Font.FontColor = XLColor.White;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                    // Add data rows
+                    int row = 2;
+                    int serialNumber = 1;
+                    foreach (var columnInfo in FilteredColumns)
+                    {
+                        col = 1;
+
+                        // S.No
+                        worksheet.Cell(row, col).Value = serialNumber++;
+                        col++;
+
+                        // Add visible column values
+                        foreach (var column in visibleColumns)
+                        {
+                            var value = column.ValueGetter(columnInfo);
+                            if (value != null)
+                            {
+                                worksheet.Cell(row, col).Value = value.ToString();
+                            }
+                            col++;
+                        }
+                        row++;
+                    }
+
+                    // Auto-fit columns with max width
+                    worksheet.Columns().AdjustToContents();
+                    foreach (var column in worksheet.ColumnsUsed())
+                    {
+                        if (column.Width > 50)
+                        {
+                            column.Width = 50;
+                        }
+                    }
+
+                    worksheet.RangeUsed()?.SetAutoFilter();
+                    workbook.SaveAs(saveFileDialog.FileName);
+                });
+
+                MessageBox.Show(
+                    $"Columns exported successfully to:\n{saveFileDialog.FileName}",
+                    "Export Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                Process.Start("explorer.exe", $"/select,\"{saveFileDialog.FileName}\"");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Failed to export columns.\n\nError: {ex.Message}",
                 "Export Failed",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
