@@ -34,6 +34,13 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<UnusedObjectInfo> _unusedObjects = [];
     private ObservableCollection<ImpactAnalysisInfo> _impactAnalysis = [];
 
+    private ObservableCollection<DependencyInfo> _filteredDependencies = [];
+    private string _dependenciesSearchText = string.Empty;
+    private ObservableCollection<UnusedObjectInfo> _filteredUnusedObjects = [];
+    private string _unusedObjectsSearchText = string.Empty;
+    private ObservableCollection<ImpactAnalysisInfo> _filteredImpactAnalysis = [];
+    private string _impactAnalysisSearchText = string.Empty;
+
     // Measures column visibility settings
     private bool _isColumnSettingsOpen;
     private bool _showNameColumn = true;
@@ -409,8 +416,55 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _dependencies = value;
                 OnPropertyChanged();
+                ApplyDependenciesFilter();
             }
         }
+    }
+
+    public ObservableCollection<DependencyInfo> FilteredDependencies
+    {
+        get => _filteredDependencies;
+        set
+        {
+            if (_filteredDependencies != value)
+            {
+                _filteredDependencies = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string DependenciesSearchText
+    {
+        get => _dependenciesSearchText;
+        set
+        {
+            if (_dependenciesSearchText != value)
+            {
+                _dependenciesSearchText = value;
+                OnPropertyChanged();
+                ApplyDependenciesFilter();
+            }
+        }
+    }
+
+    private void ApplyDependenciesFilter()
+    {
+        if (string.IsNullOrWhiteSpace(DependenciesSearchText))
+        {
+            FilteredDependencies = new ObservableCollection<DependencyInfo>(Dependencies);
+            return;
+        }
+
+        var searchLower = DependenciesSearchText.ToLowerInvariant();
+        var filtered = Dependencies.Where(d =>
+            (d.ObjectName?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (d.ObjectType?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (d.DependsOn?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (d.DependencyType?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredDependencies = new ObservableCollection<DependencyInfo>(filtered);
     }
 
     public ObservableCollection<UnusedObjectInfo> UnusedObjects
@@ -422,8 +476,55 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _unusedObjects = value;
                 OnPropertyChanged();
+                ApplyUnusedObjectsFilter();
             }
         }
+    }
+
+    public ObservableCollection<UnusedObjectInfo> FilteredUnusedObjects
+    {
+        get => _filteredUnusedObjects;
+        set
+        {
+            if (_filteredUnusedObjects != value)
+            {
+                _filteredUnusedObjects = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string UnusedObjectsSearchText
+    {
+        get => _unusedObjectsSearchText;
+        set
+        {
+            if (_unusedObjectsSearchText != value)
+            {
+                _unusedObjectsSearchText = value;
+                OnPropertyChanged();
+                ApplyUnusedObjectsFilter();
+            }
+        }
+    }
+
+    private void ApplyUnusedObjectsFilter()
+    {
+        if (string.IsNullOrWhiteSpace(UnusedObjectsSearchText))
+        {
+            FilteredUnusedObjects = new ObservableCollection<UnusedObjectInfo>(UnusedObjects);
+            return;
+        }
+
+        var searchLower = UnusedObjectsSearchText.ToLowerInvariant();
+        var filtered = UnusedObjects.Where(u =>
+            (u.Name?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (u.ObjectType?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (u.Table?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (u.Reason?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredUnusedObjects = new ObservableCollection<UnusedObjectInfo>(filtered);
     }
 
     public ObservableCollection<ImpactAnalysisInfo> ImpactAnalysis
@@ -435,8 +536,56 @@ public class MainViewModel : INotifyPropertyChanged
             {
                 _impactAnalysis = value;
                 OnPropertyChanged();
+                ApplyImpactAnalysisFilter();
             }
         }
+    }
+
+    public ObservableCollection<ImpactAnalysisInfo> FilteredImpactAnalysis
+    {
+        get => _filteredImpactAnalysis;
+        set
+        {
+            if (_filteredImpactAnalysis != value)
+            {
+                _filteredImpactAnalysis = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string ImpactAnalysisSearchText
+    {
+        get => _impactAnalysisSearchText;
+        set
+        {
+            if (_impactAnalysisSearchText != value)
+            {
+                _impactAnalysisSearchText = value;
+                OnPropertyChanged();
+                ApplyImpactAnalysisFilter();
+            }
+        }
+    }
+
+    private void ApplyImpactAnalysisFilter()
+    {
+        if (string.IsNullOrWhiteSpace(ImpactAnalysisSearchText))
+        {
+            FilteredImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>(ImpactAnalysis);
+            return;
+        }
+
+        var searchLower = ImpactAnalysisSearchText.ToLowerInvariant();
+        var filtered = ImpactAnalysis.Where(i =>
+            (i.ObjectName?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (i.ObjectType?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (i.ImpactedObject?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (i.ImpactType?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (i.Severity?.Contains(searchLower, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>(filtered);
     }
 
     // Measures Column Visibility Properties
@@ -856,6 +1005,15 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ClearRelationshipsSearchCommand { get; }
     public ICommand ExportRelationshipsCommand { get; }
 
+    // Dependencies tab commands
+    public ICommand ClearDependenciesSearchCommand { get; }
+
+    // Unused Objects tab commands
+    public ICommand ClearUnusedObjectsSearchCommand { get; }
+
+    // Impact Analysis tab commands
+    public ICommand ClearImpactAnalysisSearchCommand { get; }
+
     public MainViewModel(IPowerBIService powerBIService)
     {
         _powerBIService = powerBIService;
@@ -877,6 +1035,15 @@ public class MainViewModel : INotifyPropertyChanged
         // Relationships tab commands
         ClearRelationshipsSearchCommand = new RelayCommand(async () => await Task.Run(() => RelationshipsSearchText = string.Empty), () => true);
         ExportRelationshipsCommand = new RelayCommand(async () => await ExportRelationshipsToExcelAsync(), () => IsConnected && FilteredRelationships.Count > 0);
+
+        // Dependencies tab commands
+        ClearDependenciesSearchCommand = new RelayCommand(async () => await Task.Run(() => DependenciesSearchText = string.Empty), () => true);
+
+        // Unused Objects tab commands
+        ClearUnusedObjectsSearchCommand = new RelayCommand(async () => await Task.Run(() => UnusedObjectsSearchText = string.Empty), () => true);
+
+        // Impact Analysis tab commands
+        ClearImpactAnalysisSearchCommand = new RelayCommand(async () => await Task.Run(() => ImpactAnalysisSearchText = string.Empty), () => true);
     }
 
     private void ViewDax(object? parameter)
