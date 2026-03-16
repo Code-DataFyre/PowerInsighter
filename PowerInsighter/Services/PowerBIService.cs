@@ -512,4 +512,98 @@ public class PowerBIService : IPowerBIService
             return relationships;
         }, cancellationToken);
     }
+
+    public async Task<List<UnusedObjectInfo>> GetUnusedObjectsAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var unusedObjects = new List<UnusedObjectInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            var allMeasures = model.Tables
+                .SelectMany(t => t.Measures.Select(m => (Table: t.Name, Measure: m)))
+                .ToList();
+
+            // Precompute all measure expressions for basic reference checks
+            var expressions = allMeasures
+                .Select(m => m.Measure.Expression)
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .ToList();
+
+            bool IsMeasureReferenced(string measureName)
+                => expressions.Any(e => e.Contains($"[{measureName}]", StringComparison.OrdinalIgnoreCase));
+
+            bool IsColumnReferenced(string tableName, string columnName)
+            {
+                var token = $"'{tableName}'[{columnName}]";
+                return expressions.Any(e => e.Contains(token, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Unused Measures
+            foreach (var (tableName, measure) in allMeasures)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var referenced = IsMeasureReferenced(measure.Name);
+
+                if (measure.IsHidden && !referenced)
+                {
+                    unusedObjects.Add(new UnusedObjectInfo
+                    {
+                        Name = measure.Name,
+                        ObjectType = "Measure",
+                        Table = tableName,
+                        Reason = "Hidden measure with no references"
+                    });
+                }
+                else if (!referenced)
+                {
+                    unusedObjects.Add(new UnusedObjectInfo
+                    {
+                        Name = measure.Name,
+                        ObjectType = "Measure",
+                        Table = tableName,
+                        Reason = "Measure not referenced by other measures"
+                    });
+                }
+            }
+
+            // Unused Columns (only meaningful for hidden columns here)
+            foreach (Table table in model.Tables)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                foreach (Column column in table.Columns)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // Heuristic: flag hidden columns that are never referenced in any measure
+                    if (!column.IsHidden)
+                        continue;
+
+                    var referenced = IsColumnReferenced(table.Name, column.Name);
+                    if (!referenced)
+                    {
+                        unusedObjects.Add(new UnusedObjectInfo
+                        {
+                            Name = column.Name,
+                            ObjectType = "Column",
+                            Table = table.Name,
+                            Reason = "Hidden column with no references in measure expressions"
+                        });
+                    }
+                }
+            }
+
+            server.Disconnect();
+            return unusedObjects;
+        }, cancellationToken);
+    }
 }

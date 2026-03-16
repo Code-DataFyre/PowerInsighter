@@ -41,6 +41,13 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<ImpactAnalysisInfo> _filteredImpactAnalysis = [];
     private string _impactAnalysisSearchText = string.Empty;
 
+    private bool _isImpactAnalysisSettingsOpen;
+    private bool _showIAObjectColumn = true;
+    private bool _showIAObjectTypeColumn = true;
+    private bool _showIAImpactedObjectColumn = true;
+    private bool _showIAImpactTypeColumn = true;
+    private bool _showIASeverityColumn = true;
+
     // Measures column visibility settings
     private bool _isColumnSettingsOpen;
     private bool _showNameColumn = true;
@@ -587,6 +594,25 @@ public class MainViewModel : INotifyPropertyChanged
 
         FilteredImpactAnalysis = new ObservableCollection<ImpactAnalysisInfo>(filtered);
     }
+
+    public bool IsImpactAnalysisSettingsOpen
+    {
+        get => _isImpactAnalysisSettingsOpen;
+        set
+        {
+            if (_isImpactAnalysisSettingsOpen != value)
+            {
+                _isImpactAnalysisSettingsOpen = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public bool ShowIAObjectColumn { get => _showIAObjectColumn; set { if (_showIAObjectColumn != value) { _showIAObjectColumn = value; OnPropertyChanged(); } } }
+    public bool ShowIAObjectTypeColumn { get => _showIAObjectTypeColumn; set { if (_showIAObjectTypeColumn != value) { _showIAObjectTypeColumn = value; OnPropertyChanged(); } } }
+    public bool ShowIAImpactedObjectColumn { get => _showIAImpactedObjectColumn; set { if (_showIAImpactedObjectColumn != value) { _showIAImpactedObjectColumn = value; OnPropertyChanged(); } } }
+    public bool ShowIAImpactTypeColumn { get => _showIAImpactTypeColumn; set { if (_showIAImpactTypeColumn != value) { _showIAImpactTypeColumn = value; OnPropertyChanged(); } } }
+    public bool ShowIASeverityColumn { get => _showIASeverityColumn; set { if (_showIASeverityColumn != value) { _showIASeverityColumn = value; OnPropertyChanged(); } } }
 
     // Measures Column Visibility Properties
     public bool IsColumnSettingsOpen
@@ -1222,6 +1248,11 @@ public class MainViewModel : INotifyPropertyChanged
             StatusMessage = $"Loading relationships from {instance.DisplayName}...";
             var relationships = await _powerBIService.GetRelationshipsAsync(instance.Port, cancellationToken);
             Relationships = new ObservableCollection<RelationshipInfo>(relationships);
+
+            // Load unused objects from the model
+            StatusMessage = $"Analyzing unused objects in {instance.DisplayName}...";
+            var unusedObjects = await _powerBIService.GetUnusedObjectsAsync(instance.Port, cancellationToken);
+            UnusedObjects = new ObservableCollection<UnusedObjectInfo>(unusedObjects);
             
             // Load other data (dependencies, unused objects, impact analysis - these require more complex analysis)
             LoadAnalysisData();
@@ -1268,23 +1299,7 @@ public class MainViewModel : INotifyPropertyChanged
         }
         Dependencies = new ObservableCollection<DependencyInfo>(dependencies);
 
-        // Unused Objects - find hidden measures and columns with no references
-        var unusedObjects = new List<UnusedObjectInfo>();
-        foreach (var measure in Measures.Where(m => m.IsHidden))
-        {
-            var isReferenced = Measures.Any(m => m.Expression?.Contains($"[{measure.Name}]") == true);
-            if (!isReferenced)
-            {
-                unusedObjects.Add(new UnusedObjectInfo
-                {
-                    Name = measure.Name,
-                    ObjectType = "Measure",
-                    Table = measure.Table,
-                    Reason = "Hidden measure with no references"
-                });
-            }
-        }
-        UnusedObjects = new ObservableCollection<UnusedObjectInfo>(unusedObjects);
+        // Unused Objects are loaded from the service (model-driven)
 
         // Impact Analysis - analyze what depends on each measure
         var impactAnalysis = new List<ImpactAnalysisInfo>();

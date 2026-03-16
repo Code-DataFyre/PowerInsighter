@@ -2638,6 +2638,7 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
@@ -2721,6 +2722,8 @@
                                 </Button>
                             </Grid>
                         </Border>
+
+                        <!-- Settings Button -->
                     </Grid>
 
                     <!-- Modern DataGrid -->
@@ -2746,6 +2749,8 @@
                                   ScrollViewer.CanContentScroll="True">
 
                             <DataGrid.Resources>
+                                <!-- (no BindingProxy needed for Dependencies tab) -->
+
                                 <Style TargetType="DataGridCell">
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -3311,6 +3316,8 @@
                                   ScrollViewer.CanContentScroll="True">
 
                             <DataGrid.Resources>
+                                <helpers:BindingProxy x:Key="IAProxy" Data="{Binding}"/>
+
                                 <Style TargetType="DataGridCell">
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -3414,7 +3421,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="OBJECT" Width="180" MinWidth="120" SortMemberPath="ObjectName">
+                                <DataGridTemplateColumn Header="OBJECT" Width="180" MinWidth="120" SortMemberPath="ObjectName"
+                                                        Visibility="{Binding Data.ShowIAObjectColumn, Source={StaticResource IAProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -3425,7 +3433,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="TYPE" Width="120" MinWidth="90" SortMemberPath="ObjectType">
+                                <DataGridTemplateColumn Header="TYPE" Width="120" MinWidth="90" SortMemberPath="ObjectType"
+                                                        Visibility="{Binding Data.ShowIAObjectTypeColumn, Source={StaticResource IAProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="#F0F0F0" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
@@ -3435,7 +3444,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="IMPACTED" Width="200" MinWidth="140" SortMemberPath="ImpactedObject">
+                                <DataGridTemplateColumn Header="IMPACTED" Width="200" MinWidth="140" SortMemberPath="ImpactedObject"
+                                                        Visibility="{Binding Data.ShowIAImpactedObjectColumn, Source={StaticResource IAProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="#FFF3E0" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
@@ -3445,7 +3455,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="IMPACT TYPE" Width="150" MinWidth="120" SortMemberPath="ImpactType">
+                                <DataGridTemplateColumn Header="IMPACT TYPE" Width="150" MinWidth="120" SortMemberPath="ImpactType"
+                                                        Visibility="{Binding Data.ShowIAImpactTypeColumn, Source={StaticResource IAProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding ImpactType}" FontSize="12" Foreground="#666"/>
@@ -3453,7 +3464,8 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="SEVERITY" Width="120" MinWidth="100" SortMemberPath="Severity">
+                                <DataGridTemplateColumn Header="SEVERITY" Width="120" MinWidth="100" SortMemberPath="Severity"
+                                                        Visibility="{Binding Data.ShowIASeverityColumn, Source={StaticResource IAProxy}, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Padding="8,3" CornerRadius="10" HorizontalAlignment="Left">

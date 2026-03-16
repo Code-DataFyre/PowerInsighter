@@ -12,4 +12,5 @@ public interface IPowerBIService
     Task<List<MeasureInfo>> GetMeasuresAsync(int port, CancellationToken cancellationToken = default);
     Task<List<ColumnInfo>> GetColumnsAsync(int port, CancellationToken cancellationToken = default);
     Task<List<RelationshipInfo>> GetRelationshipsAsync(int port, CancellationToken cancellationToken = default);
+    Task<List<UnusedObjectInfo>> GetUnusedObjectsAsync(int port, CancellationToken cancellationToken = default);
 }
