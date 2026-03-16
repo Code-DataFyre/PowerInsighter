@@ -2618,7 +2618,7 @@
                 </Grid>
             </TabItem>
             
-            <!-- Dependencies Tab -->
+            <!-- Dependencies Tab (moved after Unused Objects) -->
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -2642,8 +2642,11 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Dependencies" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-                            <Border Background="#E8F4FD" CornerRadius="12" Padding="10,4" Margin="15,0,0,0" VerticalAlignment="Center">
+                            <StackPanel>
+                                <TextBlock Text="Dependencies" FontSize="22" FontWeight="Bold"/>
+                                <TextBlock Text="See which model objects reference other objects (upstream dependencies)" Foreground="Gray" FontSize="12"/>
+                            </StackPanel>
+                            <Border Background="#E8F4FD" CornerRadius="12" Padding="10,4" Margin="15,4,0,0" VerticalAlignment="Top">
                                 <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#0078D4">
                                     <Run Text="{Binding Dependencies.Count, Mode=OneWay}"/>
                                     <Run Text=" items"/>
