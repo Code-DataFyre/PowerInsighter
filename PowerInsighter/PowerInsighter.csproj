@@ -19,4 +19,15 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="4.10.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="ModelBestPractices\BPARules.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\BestPracticeRules\" />
+    <Folder Include="Testing\" />
+  </ItemGroup>
+
 </Project>

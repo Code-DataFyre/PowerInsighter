@@ -2,11 +2,11 @@ namespace PowerInsighter.Models;
 
 public sealed class BestPracticeViolation
 {
-    public required string RuleName { get; init; }
-    public required string Category { get; init; }
-    public required string Severity { get; init; }
-    public required string ObjectType { get; init; }
-    public required string ObjectName { get; init; }
+    public string RuleName { get; init; } = string.Empty;
+    public string Category { get; init; } = string.Empty;
+    public string Severity { get; init; } = string.Empty;
+    public string ObjectType { get; init; } = string.Empty;
+    public string ObjectName { get; init; } = string.Empty;
     public string? TableName { get; init; }
-    public required string Description { get; init; }
+    public string Description { get; init; } = string.Empty;
 }

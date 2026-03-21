@@ -40,6 +40,12 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<BestPracticeViolation> _filteredBestPracticeViolations = [];
     private string _bestPracticesSearchText = string.Empty;
 
+    // Grouped Best Practices view
+    private ObservableCollection<BestPracticeRuleGroup> _bestPracticeRuleGroups = [];
+    private int _totalRules;
+    private int _violatedRules;
+    private int _totalViolationScore;
+
     private ObservableCollection<DependencyInfo> _filteredDependencies = [];
     private string _dependenciesSearchText = string.Empty;
     private ObservableCollection<UnusedObjectInfo> _filteredUnusedObjects = [];
@@ -57,6 +63,7 @@ public class MainViewModel : INotifyPropertyChanged
                 _bestPracticeViolations = value;
                 OnPropertyChanged();
                 ApplyBestPracticesFilter();
+                GroupBestPracticeViolations();
             }
         }
     }
@@ -108,6 +115,104 @@ public class MainViewModel : INotifyPropertyChanged
         ).ToList();
 
         FilteredBestPracticeViolations = new ObservableCollection<BestPracticeViolation>(filtered);
+    }
+
+    public ObservableCollection<BestPracticeRuleGroup> BestPracticeRuleGroups
+    {
+        get => _bestPracticeRuleGroups;
+        set
+        {
+            if (_bestPracticeRuleGroups != value)
+            {
+                _bestPracticeRuleGroups = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public int TotalRules
+    {
+        get => _totalRules;
+        set
+        {
+            if (_totalRules != value)
+            {
+                _totalRules = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(RulesViolatedSummary));
+            }
+        }
+    }
+
+    public int ViolatedRules
+    {
+        get => _violatedRules;
+        set
+        {
+            if (_violatedRules != value)
+            {
+                _violatedRules = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(RulesViolatedSummary));
+            }
+        }
+    }
+
+    public int TotalViolationScore
+    {
+        get => _totalViolationScore;
+        set
+        {
+            if (_totalViolationScore != value)
+            {
+                _totalViolationScore = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string RulesViolatedSummary => $"Rules violated: {ViolatedRules} of {TotalRules}";
+
+    private void GroupBestPracticeViolations()
+    {
+        var groups = BestPracticeViolations
+            .GroupBy(v => v.RuleName)
+            .Select(g =>
+            {
+                var firstViolation = g.First();
+                var severityLevel = GetSeverityLevel(firstViolation.Severity);
+                
+                return new BestPracticeRuleGroup
+                {
+                    RuleName = g.Key ?? "Unknown Rule",
+                    Category = firstViolation.Category ?? string.Empty,
+                    Description = firstViolation.Description ?? string.Empty,
+                    Severity = firstViolation.Severity ?? string.Empty,
+                    SeverityLevel = severityLevel,
+                    ViolationCount = g.Count(),
+                    ViolationScore = g.Count() * severityLevel,
+                    Violations = new ObservableCollection<BestPracticeViolation>(g),
+                    IsExpanded = false
+                };
+            })
+            .OrderByDescending(g => g.SeverityLevel)
+            .ThenByDescending(g => g.ViolationCount)
+            .ToList();
+
+        BestPracticeRuleGroups = new ObservableCollection<BestPracticeRuleGroup>(groups);
+        ViolatedRules = groups.Count;
+        TotalViolationScore = groups.Sum(g => g.ViolationScore);
+    }
+
+    private int GetSeverityLevel(string? severity)
+    {
+        return severity?.ToLower() switch
+        {
+            "error" => 3,
+            "warning" => 2,
+            "info" or "information" => 1,
+            _ => 1
+        };
     }
 
     private bool _isImpactAnalysisSettingsOpen;
@@ -1113,6 +1218,8 @@ public class MainViewModel : INotifyPropertyChanged
 
     // Best Practices tab commands
     public ICommand ClearBestPracticesSearchCommand { get; }
+    public ICommand ExpandAllBPRulesCommand { get; }
+    public ICommand CollapseAllBPRulesCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -1147,6 +1254,24 @@ public class MainViewModel : INotifyPropertyChanged
 
         // Best Practices tab commands
         ClearBestPracticesSearchCommand = new RelayCommand(async () => await Task.Run(() => BestPracticesSearchText = string.Empty), () => true);
+        ExpandAllBPRulesCommand = new RelayCommand(async () => await Task.Run(() => ExpandAllBPRules()), () => true);
+        CollapseAllBPRulesCommand = new RelayCommand(async () => await Task.Run(() => CollapseAllBPRules()), () => true);
+    }
+
+    private void ExpandAllBPRules()
+    {
+        foreach (var group in BestPracticeRuleGroups)
+        {
+            group.IsExpanded = true;
+        }
+    }
+
+    private void CollapseAllBPRules()
+    {
+        foreach (var group in BestPracticeRuleGroups)
+        {
+            group.IsExpanded = false;
+        }
     }
 
     private void ViewDax(object? parameter)
@@ -1331,28 +1456,50 @@ public class MainViewModel : INotifyPropertyChanged
             var unusedObjects = await _powerBIService.GetUnusedObjectsAsync(instance.Port, cancellationToken);
             UnusedObjects = new ObservableCollection<UnusedObjectInfo>(unusedObjects);
 
-            // Load Best Practice Analyzer results (BPA)
+            // Load Best Practice Analyzer results (BPA) - Using local BPARules.json file
             StatusMessage = $"Loading Best Practice rules...";
-            var rulesRepo = new BestPracticeRulesRepository(new HttpClient());
-            var rules = await rulesRepo.LoadRulesAsync(cancellationToken);
-
-            StatusMessage = $"Running Best Practice Analyzer...";
-            var bpa = new BestPracticeAnalyzer(rules);
-            var violations = await Task.Run(() =>
+            try
             {
-                using var server = new Server();
-                server.Connect($"DataSource=localhost:{instance.Port}");
-                var database = server.Databases[0];
-                var model = database.Model;
-                return bpa.AnalyzeModel(model);
-            }, cancellationToken);
+                Debug.WriteLine("BPA: Loading rules from local BPARules.json file");
+                var rules = await LocalBestPracticeRulesLoader.LoadRulesAsync();
+                Debug.WriteLine($"BPA: Loaded {rules.Count} rules from local file");
 
-            BestPracticeViolations = new ObservableCollection<BestPracticeViolation>(violations);
-            ApplyBestPracticesFilter();
+                TotalRules = rules.Count; // Set total rules count
 
-            if (BestPracticeViolations.Count == 0)
+                if (rules.Count == 0)
+                {
+                    Debug.WriteLine("BPA: Warning - No rules loaded from file");
+                    BestPracticeViolations = new ObservableCollection<BestPracticeViolation>();
+                }
+                else
+                {
+                    StatusMessage = $"Running Best Practice Analyzer with {rules.Count} rules...";
+                    var bpa = new BestPracticeAnalyzer(rules);
+                    var violations = await Task.Run(() =>
+                    {
+                        using var server = new Server();
+                        server.Connect($"DataSource=localhost:{instance.Port}");
+                        var database = server.Databases[0];
+                        var model = database.Model;
+                        Debug.WriteLine($"BPA: Analyzing model '{model.Name}' with {model.Tables.Count} tables");
+                        return bpa.AnalyzeModel(model);
+                    }, cancellationToken);
+
+                    BestPracticeViolations = new ObservableCollection<BestPracticeViolation>(violations);
+                    ApplyBestPracticesFilter();
+
+                    Debug.WriteLine($"BPA: Analysis complete. Found {BestPracticeViolations.Count} violations");
+                    if (BestPracticeViolations.Count == 0)
+                    {
+                        Debug.WriteLine("BPA: No violations found - model follows all best practices!");
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                Debug.WriteLine("BPA: No violations returned.");
+                Debug.WriteLine($"BPA: Error during analysis: {ex.Message}");
+                Debug.WriteLine($"BPA: Stack trace: {ex.StackTrace}");
+                BestPracticeViolations = new ObservableCollection<BestPracticeViolation>();
             }
             
             // Load other data (dependencies, unused objects, impact analysis - these require more complex analysis)
