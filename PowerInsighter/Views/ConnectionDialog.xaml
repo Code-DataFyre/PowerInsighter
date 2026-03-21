@@ -47,10 +47,12 @@
                                     <Setter.Value>
                                         <VisualBrush Stretch="None" AlignmentX="Left">
                                             <VisualBrush.Visual>
-                                                <TextBlock Text="?? Search by file name, port, or window title..." 
-                                                          Foreground="Gray" 
-                                                          Margin="8,0,0,0"
-                                                          FontSize="14"/>
+                                <TextBlock Foreground="Gray" 
+                                           Margin="8,0,0,0"
+                                           FontSize="14">
+                                    <Run Text="&#xE721;" FontFamily="Segoe MDL2 Assets"/>
+                                    <Run Text=" Search by file name, port, or window title..."/>
+                                </TextBlock>
                                             </VisualBrush.Visual>
                                         </VisualBrush>
                                     </Setter.Value>
@@ -68,7 +70,7 @@
                     Margin="10,0,0,0"
                     Command="{Binding RefreshCommand}"
                     ToolTip="Refresh list">
-                <TextBlock Text="??" FontSize="18"/>
+                <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="18"/>
             </Button>
         </Grid>
 
@@ -160,7 +162,8 @@
                    Foreground="Gray"
                    FontSize="12"
                    TextWrapping="Wrap">
-            <Run Text="?? Tip: Make sure a .pbix file is open in Power BI Desktop. "/>
+            <Run Text="&#xE946;" FontFamily="Segoe MDL2 Assets"/>
+            <Run Text=" Tip: Make sure a .pbix file is open in Power BI Desktop. "/>
             <Run Text="Double-click or select an instance and click Connect."/>
         </TextBlock>
 

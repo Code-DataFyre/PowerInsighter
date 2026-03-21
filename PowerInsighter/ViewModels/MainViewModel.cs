@@ -9,6 +9,8 @@ using Microsoft.Win32;
 using PowerInsighter.Models;
 using PowerInsighter.Services;
 using PowerInsighter.Views;
+using Microsoft.AnalysisServices.Tabular;
+using System.Net.Http;
 
 namespace PowerInsighter.ViewModels;
 
@@ -34,12 +36,79 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<UnusedObjectInfo> _unusedObjects = [];
     private ObservableCollection<ImpactAnalysisInfo> _impactAnalysis = [];
 
+    private ObservableCollection<BestPracticeViolation> _bestPracticeViolations = [];
+    private ObservableCollection<BestPracticeViolation> _filteredBestPracticeViolations = [];
+    private string _bestPracticesSearchText = string.Empty;
+
     private ObservableCollection<DependencyInfo> _filteredDependencies = [];
     private string _dependenciesSearchText = string.Empty;
     private ObservableCollection<UnusedObjectInfo> _filteredUnusedObjects = [];
     private string _unusedObjectsSearchText = string.Empty;
     private ObservableCollection<ImpactAnalysisInfo> _filteredImpactAnalysis = [];
     private string _impactAnalysisSearchText = string.Empty;
+
+    public ObservableCollection<BestPracticeViolation> BestPracticeViolations
+    {
+        get => _bestPracticeViolations;
+        set
+        {
+            if (_bestPracticeViolations != value)
+            {
+                _bestPracticeViolations = value;
+                OnPropertyChanged();
+                ApplyBestPracticesFilter();
+            }
+        }
+    }
+
+    public ObservableCollection<BestPracticeViolation> FilteredBestPracticeViolations
+    {
+        get => _filteredBestPracticeViolations;
+        set
+        {
+            if (_filteredBestPracticeViolations != value)
+            {
+                _filteredBestPracticeViolations = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string BestPracticesSearchText
+    {
+        get => _bestPracticesSearchText;
+        set
+        {
+            if (_bestPracticesSearchText != value)
+            {
+                _bestPracticesSearchText = value;
+                OnPropertyChanged();
+                ApplyBestPracticesFilter();
+            }
+        }
+    }
+
+    private void ApplyBestPracticesFilter()
+    {
+        if (string.IsNullOrWhiteSpace(BestPracticesSearchText))
+        {
+            FilteredBestPracticeViolations = new ObservableCollection<BestPracticeViolation>(BestPracticeViolations);
+            return;
+        }
+
+        var search = BestPracticesSearchText.Trim();
+        var filtered = BestPracticeViolations.Where(v =>
+            (v.RuleName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.Category?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.Severity?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.ObjectType?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.ObjectName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.TableName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (v.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredBestPracticeViolations = new ObservableCollection<BestPracticeViolation>(filtered);
+    }
 
     private bool _isImpactAnalysisSettingsOpen;
     private bool _showIAObjectColumn = true;
@@ -120,6 +189,8 @@ public class MainViewModel : INotifyPropertyChanged
     private string _selectedDaxExpression = string.Empty;
     private string _selectedMeasureName = string.Empty;
     private bool _isFormatting;
+
+    private int? _connectedPort;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1040,6 +1111,9 @@ public class MainViewModel : INotifyPropertyChanged
     // Impact Analysis tab commands
     public ICommand ClearImpactAnalysisSearchCommand { get; }
 
+    // Best Practices tab commands
+    public ICommand ClearBestPracticesSearchCommand { get; }
+
     public MainViewModel(IPowerBIService powerBIService)
     {
         _powerBIService = powerBIService;
@@ -1070,6 +1144,9 @@ public class MainViewModel : INotifyPropertyChanged
 
         // Impact Analysis tab commands
         ClearImpactAnalysisSearchCommand = new RelayCommand(async () => await Task.Run(() => ImpactAnalysisSearchText = string.Empty), () => true);
+
+        // Best Practices tab commands
+        ClearBestPracticesSearchCommand = new RelayCommand(async () => await Task.Run(() => BestPracticesSearchText = string.Empty), () => true);
     }
 
     private void ViewDax(object? parameter)
@@ -1100,7 +1177,7 @@ public class MainViewModel : INotifyPropertyChanged
             try
             {
                 Clipboard.SetText(expression);
-                StatusMessage = "? DAX expression copied to clipboard!";
+                StatusMessage = "DAX expression copied to clipboard!";
             }
             catch (Exception ex)
             {
@@ -1124,7 +1201,7 @@ public class MainViewModel : INotifyPropertyChanged
             var formattedDax = await formatterService.FormatDaxAsync(SelectedDaxExpression);
             
             SelectedDaxExpression = formattedDax;
-            StatusMessage = "? DAX expression formatted!";
+            StatusMessage = "DAX expression formatted!";
         }
         catch (Exception ex)
         {
@@ -1165,7 +1242,7 @@ public class MainViewModel : INotifyPropertyChanged
             try
             {
                 Clipboard.SetText(expression);
-                StatusMessage = "? Column expression copied to clipboard!";
+                StatusMessage = "Column expression copied to clipboard!";
             }
             catch (Exception ex)
             {
@@ -1253,12 +1330,37 @@ public class MainViewModel : INotifyPropertyChanged
             StatusMessage = $"Analyzing unused objects in {instance.DisplayName}...";
             var unusedObjects = await _powerBIService.GetUnusedObjectsAsync(instance.Port, cancellationToken);
             UnusedObjects = new ObservableCollection<UnusedObjectInfo>(unusedObjects);
+
+            // Load Best Practice Analyzer results (BPA)
+            StatusMessage = $"Loading Best Practice rules...";
+            var rulesRepo = new BestPracticeRulesRepository(new HttpClient());
+            var rules = await rulesRepo.LoadRulesAsync(cancellationToken);
+
+            StatusMessage = $"Running Best Practice Analyzer...";
+            var bpa = new BestPracticeAnalyzer(rules);
+            var violations = await Task.Run(() =>
+            {
+                using var server = new Server();
+                server.Connect($"DataSource=localhost:{instance.Port}");
+                var database = server.Databases[0];
+                var model = database.Model;
+                return bpa.AnalyzeModel(model);
+            }, cancellationToken);
+
+            BestPracticeViolations = new ObservableCollection<BestPracticeViolation>(violations);
+            ApplyBestPracticesFilter();
+
+            if (BestPracticeViolations.Count == 0)
+            {
+                Debug.WriteLine("BPA: No violations returned.");
+            }
             
             // Load other data (dependencies, unused objects, impact analysis - these require more complex analysis)
             LoadAnalysisData();
             
-            StatusMessage = $"? Connected to {instance.DisplayName}! Loaded {ModelOverview.MeasureCount} measures, {ModelOverview.ColumnCount} columns, {ModelOverview.RelationshipCount} relationships";
+            StatusMessage = $"Connected to {instance.DisplayName}! Loaded {ModelOverview.MeasureCount} measures, {ModelOverview.ColumnCount} columns, {ModelOverview.RelationshipCount} relationships";
             IsConnected = true;
+            _connectedPort = instance.Port;
         }
         catch (Exception ex)
         {
