@@ -53,6 +53,11 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<ImpactAnalysisInfo> _filteredImpactAnalysis = [];
     private string _impactAnalysisSearchText = string.Empty;
 
+    // Tables tab
+    private ObservableCollection<TableDetailInfo> _tableDetails = [];
+    private ObservableCollection<TableDetailInfo> _filteredTableDetails = [];
+    private string _tablesSearchText = string.Empty;
+
     public ObservableCollection<BestPracticeViolation> BestPracticeViolations
     {
         get => _bestPracticeViolations;
@@ -790,6 +795,67 @@ public class MainViewModel : INotifyPropertyChanged
     public bool ShowIAImpactTypeColumn { get => _showIAImpactTypeColumn; set { if (_showIAImpactTypeColumn != value) { _showIAImpactTypeColumn = value; OnPropertyChanged(); } } }
     public bool ShowIASeverityColumn { get => _showIASeverityColumn; set { if (_showIASeverityColumn != value) { _showIASeverityColumn = value; OnPropertyChanged(); } } }
 
+    // Tables tab properties
+    public ObservableCollection<TableDetailInfo> TableDetails
+    {
+        get => _tableDetails;
+        set
+        {
+            if (_tableDetails != value)
+            {
+                _tableDetails = value;
+                OnPropertyChanged();
+                ApplyTablesFilter();
+            }
+        }
+    }
+
+    public ObservableCollection<TableDetailInfo> FilteredTableDetails
+    {
+        get => _filteredTableDetails;
+        set
+        {
+            if (_filteredTableDetails != value)
+            {
+                _filteredTableDetails = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string TablesSearchText
+    {
+        get => _tablesSearchText;
+        set
+        {
+            if (_tablesSearchText != value)
+            {
+                _tablesSearchText = value;
+                OnPropertyChanged();
+                ApplyTablesFilter();
+            }
+        }
+    }
+
+    private void ApplyTablesFilter()
+    {
+        if (string.IsNullOrWhiteSpace(TablesSearchText))
+        {
+            FilteredTableDetails = new ObservableCollection<TableDetailInfo>(TableDetails);
+            return;
+        }
+
+        var search = TablesSearchText.Trim();
+        var filtered = TableDetails.Where(t =>
+            (t.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (t.DataSource?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (t.SourceType?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (t.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredTableDetails = new ObservableCollection<TableDetailInfo>(filtered);
+    }
+
     // Measures Column Visibility Properties
     public bool IsColumnSettingsOpen
     {
@@ -1221,6 +1287,9 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand ExpandAllBPRulesCommand { get; }
     public ICommand CollapseAllBPRulesCommand { get; }
 
+    // Tables tab commands
+    public ICommand ClearTablesSearchCommand { get; }
+
     public MainViewModel(IPowerBIService powerBIService)
     {
         _powerBIService = powerBIService;
@@ -1256,6 +1325,9 @@ public class MainViewModel : INotifyPropertyChanged
         ClearBestPracticesSearchCommand = new RelayCommand(async () => await Task.Run(() => BestPracticesSearchText = string.Empty), () => true);
         ExpandAllBPRulesCommand = new RelayCommand(async () => await Task.Run(() => ExpandAllBPRules()), () => true);
         CollapseAllBPRulesCommand = new RelayCommand(async () => await Task.Run(() => CollapseAllBPRules()), () => true);
+
+        // Tables tab commands
+        ClearTablesSearchCommand = new RelayCommand(async () => await Task.Run(() => TablesSearchText = string.Empty), () => true);
     }
 
     private void ExpandAllBPRules()
@@ -1450,6 +1522,11 @@ public class MainViewModel : INotifyPropertyChanged
             StatusMessage = $"Loading relationships from {instance.DisplayName}...";
             var relationships = await _powerBIService.GetRelationshipsAsync(instance.Port, cancellationToken);
             Relationships = new ObservableCollection<RelationshipInfo>(relationships);
+
+            // Load table details
+            StatusMessage = $"Loading table details from {instance.DisplayName}...";
+            var tableDetails = await _powerBIService.GetTableDetailsAsync(instance.Port, cancellationToken);
+            TableDetails = new ObservableCollection<TableDetailInfo>(tableDetails);
 
             // Load unused objects from the model
             StatusMessage = $"Analyzing unused objects in {instance.DisplayName}...";

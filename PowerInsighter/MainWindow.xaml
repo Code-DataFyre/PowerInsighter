@@ -228,6 +228,19 @@
                                     <TextBlock Text="Compatibility Level" Foreground="Gray" FontSize="12"/>
                                     <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="20" FontWeight="Bold" Foreground="#666666"/>
                                 </StackPanel>
+                                <StackPanel Grid.Column="1" Grid.Row="2" Margin="10">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Data Sources" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="10" Margin="4,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <TextBlock TextWrapping="Wrap" MaxWidth="250" Text="Total unique data source types used across all tables (e.g., SQL Server, Excel, CSV, Web API). See the Tables tab for per-table details."/>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding ModelOverview.UniqueSourceTypesCount}" FontSize="28" FontWeight="Bold" Foreground="#B4009E"/>
+                                </StackPanel>
                             </Grid>
                         </Border>
 
@@ -409,6 +422,231 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <!-- Tables Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Tables" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header with Title, Count, and Search Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Tables" FontSize="22" FontWeight="Bold"/>
+                            <Border Background="#E3F2FD" CornerRadius="12" Padding="10,4" Margin="15,4,0,0" VerticalAlignment="Top">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#0078D4">
+                                    <Run Text="{Binding FilteredTableDetails.Count, Mode=OneWay}"/>
+                                    <Run Text=" of "/>
+                                    <Run Text="{Binding TableDetails.Count, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+
+                        <Border Grid.Column="2"
+                                Background="White"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,6"
+                                Width="320"
+                                VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding TablesSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         BorderThickness="0"
+                                         FontSize="13"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                                <VisualBrush.Visual>
+                                                                    <TextBlock Text="Search tables..." Foreground="#999" FontSize="13"/>
+                                                                </VisualBrush.Visual>
+                                                            </VisualBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <Button Grid.Column="2"
+                                        Command="{Binding ClearTablesSearchCommand}"
+                                        Content="✕"
+                                        FontSize="12"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="#999"
+                                        Cursor="Hand"
+                                        Padding="4,0"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Tables DataGrid -->
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding FilteredTableDetails}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserSortColumns="True"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#F0F0F0"
+                              Background="White"
+                              BorderBrush="#E0E0E0"
+                              BorderThickness="1"
+                              RowHeight="36"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              AlternatingRowBackground="#FAFAFA">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                                <Setter Property="Foreground" Value="#333"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Padding" Value="10,8"/>
+                                <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="S.No" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontWeight="SemiBold" Foreground="#888" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource RowNumberConverter}">
+                                                    <Binding />
+                                                    <Binding Path="DataContext.FilteredTableDetails" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Table Name" Width="*" Binding="{Binding Name}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Padding" Value="10,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Columns" Width="80" Binding="{Binding ColumnCount}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Measures" Width="85" Binding="{Binding MeasureCount}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Hierarchies" Width="90" Binding="{Binding HierarchyCount}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Calc Group Items" Width="110" Binding="{Binding CalculationGroupItemCount}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Data Source" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E3F2FD" CornerRadius="4" Padding="8,3" Margin="4,4" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding DataSource}" FontSize="11" FontWeight="SemiBold" Foreground="#0078D4"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Source Type" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E8F5E9" CornerRadius="4" Padding="8,3" Margin="4,4" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding SourceType}" FontSize="11" FontWeight="SemiBold" Foreground="#107C10"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Partitions" Width="80" Binding="{Binding PartitionCount}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Hidden" Width="65">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding IsHidden}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                                                            <Setter Property="Text" Value="🙈"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsHidden}" Value="False">
+                                                            <Setter Property="Text" Value=""/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </TabItem>
 
             <!-- Best Practices Tab -->

@@ -32,4 +32,36 @@ public class ModelOverview
     // File size properties
     public long FileSize { get; init; }  // .pbix file size on disk
     public string? FilePath { get; init; }  // Path to the .pbix file
+
+    // Data source properties
+    public List<DataSourceInfo> DataSources { get; init; } = [];
+    public List<TableSourceInfo> TableSources { get; init; } = [];
+    public int DataSourceCount { get; init; }
+    public int UniqueSourceTypesCount { get; init; }  // Total unique source types used
+}
+
+/// <summary>
+/// Information about a data source defined in the model.
+/// Available directly from model.DataSources collection.
+/// </summary>
+public class DataSourceInfo
+{
+    public string Name { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;  // Provider or Structured
+    public string? Description { get; init; }
+    public string? ConnectionDetails { get; init; }
+    public int MaxConnections { get; init; }
+    public DateTime? ModifiedTime { get; init; }
+}
+
+/// <summary>
+/// Information about a table's data source type.
+/// Requires iterating through tables and partitions.
+/// </summary>
+public class TableSourceInfo
+{
+    public string TableName { get; init; } = string.Empty;
+    public string SourceType { get; init; } = string.Empty;  // M, Query, Calculated, None, etc.
+    public string? SourceExpression { get; init; }  // M expression or query text
+    public string? DetectedSourceKind { get; init; }  // Parsed from M: Sql.Database, Excel.Workbook, etc.
 }

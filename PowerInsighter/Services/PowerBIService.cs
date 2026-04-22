@@ -437,6 +437,88 @@ public class PowerBIService : IPowerBIService
         // Use reportName if provided, otherwise fall back to model.Name or database.Name
         var modelName = !string.IsNullOrEmpty(reportName) ? reportName : (model.Name ?? database.Name);
 
+        // Get data source information - DIRECTLY from model.DataSources (no iteration of tables needed)
+        var dataSources = new List<DataSourceInfo>();
+        try
+        {
+            foreach (var ds in model.DataSources)
+            {
+                string? connDetails = null;
+
+                // Get connection details for StructuredDataSource
+                if (ds is StructuredDataSource sds)
+                {
+                    try
+                    {
+                        connDetails = sds.ConnectionDetails?.Address?.ToString();
+                    }
+                    catch
+                    {
+                        // ConnectionDetails may not be accessible
+                    }
+                }
+
+                dataSources.Add(new DataSourceInfo
+                {
+                    Name = ds.Name,
+                    Type = ds.Type.ToString(),
+                    Description = ds.Description,
+                    ConnectionDetails = connDetails,
+                    MaxConnections = ds.MaxConnections,
+                    ModifiedTime = ds.ModifiedTime
+                });
+            }
+            Debug.WriteLine($"Found {dataSources.Count} data sources directly from model.DataSources");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting data sources: {ex.Message}");
+        }
+
+        // Get per-table source types - REQUIRES iterating tables → partitions
+        var tableSources = new List<TableSourceInfo>();
+        try
+        {
+            foreach (Table table in model.Tables)
+            {
+                foreach (Partition partition in table.Partitions)
+                {
+                    string? sourceExpression = null;
+                    string? detectedSourceKind = null;
+
+                    // Extract source expression and detect source kind
+                    if (partition.Source is MPartitionSource mSource)
+                    {
+                        sourceExpression = mSource.Expression;
+                        detectedSourceKind = DetectSourceKindFromMExpression(mSource.Expression);
+                    }
+                    else if (partition.Source is QueryPartitionSource qSource)
+                    {
+                        sourceExpression = qSource.Query;
+                        detectedSourceKind = "SQL Query";
+                    }
+                    else if (partition.Source is CalculatedPartitionSource cSource)
+                    {
+                        sourceExpression = cSource.Expression;
+                        detectedSourceKind = "DAX Calculated";
+                    }
+
+                    tableSources.Add(new TableSourceInfo
+                    {
+                        TableName = table.Name,
+                        SourceType = partition.SourceType.ToString(),
+                        SourceExpression = sourceExpression,
+                        DetectedSourceKind = detectedSourceKind
+                    });
+                }
+            }
+            Debug.WriteLine($"Extracted {tableSources.Count} table source types by iterating tables/partitions");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting table sources: {ex.Message}");
+        }
+
             var overview = new ModelOverview
             {
                 ModelName = modelName,
@@ -462,7 +544,15 @@ public class PowerBIService : IPowerBIService
                 TotalDataSize = totalDataSize,
                 TotalHierarchiesSize = totalHierarchiesSize,
                 FileSize = fileSize,
-                FilePath = filePath
+                FilePath = filePath,
+                DataSources = dataSources,
+                TableSources = tableSources,
+                DataSourceCount = dataSources.Count,
+                UniqueSourceTypesCount = tableSources
+                    .Where(t => !string.IsNullOrEmpty(t.DetectedSourceKind) && t.DetectedSourceKind != "Unknown")
+                    .Select(t => t.DetectedSourceKind)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count()
             };
 
         server.Disconnect();
@@ -743,6 +833,80 @@ public class PowerBIService : IPowerBIService
         }, cancellationToken);
     }
 
+    public async Task<List<TableDetailInfo>> GetTableDetailsAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var tableDetails = new List<TableDetailInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            foreach (Table table in model.Tables)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Detect data source from first partition's M expression
+                var dataSource = "Unknown";
+                var sourceType = "None";
+                if (table.Partitions.Count > 0)
+                {
+                    var partition = table.Partitions[0];
+                    sourceType = partition.SourceType.ToString();
+
+                    if (partition.Source is MPartitionSource mSource)
+                    {
+                        dataSource = DetectSourceKindFromMExpression(mSource.Expression) ?? "Unknown";
+                    }
+                    else if (partition.Source is CalculatedPartitionSource)
+                    {
+                        dataSource = "DAX Calculated";
+                    }
+                    else if (partition.Source is QueryPartitionSource)
+                    {
+                        dataSource = "SQL Query";
+                    }
+                }
+
+                // Check if table is a calculation group
+                var isCalcGroup = false;
+                var calcGroupItemCount = 0;
+                try
+                {
+                    if (table.CalculationGroup != null)
+                    {
+                        isCalcGroup = true;
+                        calcGroupItemCount = table.CalculationGroup.CalculationItems.Count;
+                    }
+                }
+                catch { /* CalculationGroup may not be available */ }
+
+                tableDetails.Add(new TableDetailInfo
+                {
+                    Name = table.Name,
+                    ColumnCount = table.Columns.Count,
+                    MeasureCount = table.Measures.Count,
+                    HierarchyCount = table.Hierarchies.Count,
+                    CalculationGroupItemCount = calcGroupItemCount,
+                    IsCalculationGroup = isCalcGroup,
+                    DataSource = dataSource,
+                    SourceType = sourceType,
+                    IsHidden = table.IsHidden,
+                    PartitionCount = table.Partitions.Count,
+                    Description = table.Description
+                });
+            }
+
+            server.Disconnect();
+            return tableDetails;
+        }, cancellationToken);
+    }
+
     /// <summary>
     /// Gets detailed storage statistics from DMV queries.
     /// This provides accurate per-column dictionary size, data size, and more.
@@ -761,5 +925,84 @@ public class PowerBIService : IPowerBIService
             Debug.WriteLine($"Error in GetStorageStatisticsAsync: {ex.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Detects the data source kind by parsing common Power Query (M) function names.
+    /// This tells you the actual connector used (SQL Server, Excel, Web, SharePoint, etc.)
+    /// </summary>
+    private static string? DetectSourceKindFromMExpression(string? expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression))
+            return null;
+
+        // Map of M function prefixes to friendly source names
+        var sourceKindMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Sql.Database", "SQL Server" },
+            { "Sql.Databases", "SQL Server" },
+            { "Oracle.Database", "Oracle" },
+            { "Odbc.DataSource", "ODBC" },
+            { "OleDb.DataSource", "OLE DB" },
+            { "Mysql.Database", "MySQL" },
+            { "PostgreSQL.Database", "PostgreSQL" },
+            { "Sybase.Database", "Sybase / SAP ASE" },
+            { "DB2.Database", "IBM DB2" },
+            { "Teradata.Database", "Teradata" },
+            { "AmazonRedshift.Database", "Amazon Redshift" },
+            { "GoogleBigQuery.Database", "Google BigQuery" },
+            { "Snowflake.Databases", "Snowflake" },
+            { "Databricks.Catalogs", "Databricks" },
+            { "Excel.Workbook", "Excel" },
+            { "Csv.Document", "CSV" },
+            { "Json.Document", "JSON" },
+            { "Xml.Document", "XML" },
+            { "File.Contents", "Local File" },
+            { "Folder.Contents", "Local Folder" },
+            { "Folder.Files", "Local Folder" },
+            { "Web.Contents", "Web / REST API" },
+            { "Web.Page", "Web Page" },
+            { "Web.BrowserContents", "Web Browser" },
+            { "SharePoint.Contents", "SharePoint" },
+            { "SharePoint.Files", "SharePoint" },
+            { "SharePoint.Tables", "SharePoint List" },
+            { "ActiveDirectory.Domains", "Active Directory" },
+            { "Exchange.Contents", "Exchange" },
+            { "AzureStorage.Blobs", "Azure Blob Storage" },
+            { "AzureStorage.Tables", "Azure Table Storage" },
+            { "AzureStorage.DataLake", "Azure Data Lake" },
+            { "AzureStorage.DataLakeContents", "Azure Data Lake" },
+            { "Sql.Server", "Azure SQL" },
+            { "AzureHiveLLAP.Database", "Azure HDInsight" },
+            { "Salesforce.Data", "Salesforce" },
+            { "Salesforce.Reports", "Salesforce Reports" },
+            { "OData.Feed", "OData Feed" },
+            { "AnalysisServices.Database", "Analysis Services" },
+            { "AnalysisServices.Databases", "Analysis Services" },
+            { "Cube.Transform", "SSAS Cube" },
+            { "Power BI dataflows", "Dataflow" },
+            { "PowerPlatform.Dataflows", "Power Platform Dataflow" },
+            { "Parquet.Document", "Parquet" },
+            { "Pdf.Tables", "PDF" },
+            { "RData.FromBinary", "R Script" },
+            { "R.Execute", "R Script" },
+            { "Python.Execute", "Python Script" },
+            { "Table.FromColumns", "Entered Data" },
+            { "Table.FromRows", "Entered Data" },
+            { "#table", "Entered Data" },
+            { "Kusto.Contents", "Azure Data Explorer (Kusto)" },
+            { "GoogleAnalytics.Accounts", "Google Analytics" },
+            { "Facebook.Graph", "Facebook" },
+            { "Dynamics365.Contents", "Dynamics 365" },
+            { "CommonDataService.Database", "Dataverse" }
+        };
+
+        foreach (var kvp in sourceKindMap)
+        {
+            if (expression.Contains(kvp.Key, StringComparison.OrdinalIgnoreCase))
+                return kvp.Value;
+        }
+
+        return "Unknown";
     }
 }
