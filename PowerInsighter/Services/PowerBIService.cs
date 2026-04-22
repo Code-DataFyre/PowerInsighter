@@ -360,6 +360,7 @@ public class PowerBIService : IPowerBIService
         var measureCount = model.Tables.Sum(t => t.Measures.Count);
         var columnCount = model.Tables.Sum(t => t.Columns.Count);
         var relationshipCount = model.Relationships.Count;
+        var roleCount = model.Roles.Count;
         var calculatedColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.Type == ColumnType.Calculated));
         var calculatedTableCount = model.Tables.Count(t => t.Partitions.Any(p => p.SourceType == PartitionSourceType.Calculated));
 
@@ -526,6 +527,7 @@ public class PowerBIService : IPowerBIService
                 MeasureCount = measureCount,
                 ColumnCount = columnCount,
                 RelationshipCount = relationshipCount,
+                RoleCount = roleCount,
                 CalculatedColumnCount = calculatedColumnCount,
                 CalculatedTableCount = calculatedTableCount,
                 ModelSize = database.EstimatedSize,
@@ -1004,5 +1006,74 @@ public class PowerBIService : IPowerBIService
         }
 
         return "Unknown";
+    }
+
+    public async Task<List<RlsRoleInfo>> GetRlsRolesAsync(int port, CancellationToken cancellationToken = default)
+    {
+        return await Task.Run(() =>
+        {
+            var roles = new List<RlsRoleInfo>();
+
+            using var server = new Server();
+            server.Connect($"DataSource=localhost:{port}");
+
+            if (server.Databases.Count == 0)
+                throw new InvalidOperationException("No databases found.");
+
+            var model = server.Databases[0].Model;
+
+            foreach (ModelRole role in model.Roles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var members = role.Members
+                    .Select(m => m.MemberName)
+                    .Where(m => !string.IsNullOrWhiteSpace(m))
+                    .ToList();
+
+                var tablePermissions = role.TablePermissions.ToList();
+                var tablePermissionsWithFilters = tablePermissions
+                    .Where(tp => !string.IsNullOrWhiteSpace(tp.FilterExpression))
+                    .ToList();
+
+                var hasOls = tablePermissions.Any(tp => tp.ColumnPermissions.Any(cp => cp.MetadataPermission == MetadataPermission.None));
+                var tablesWithFilters = tablePermissionsWithFilters
+                    .Select(tp => tp.Table?.Name ?? tp.Name)
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var filterSummaryParts = tablePermissionsWithFilters
+                    .Select(tp =>
+                    {
+                        var tableName = tp.Table?.Name ?? tp.Name;
+                        var expression = tp.FilterExpression?.Replace(Environment.NewLine, " ").Trim();
+                        return string.IsNullOrWhiteSpace(expression) ? null : $"{tableName}: {expression}";
+                    })
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToList();
+
+                roles.Add(new RlsRoleInfo
+                {
+                    Name = role.Name,
+                    Description = role.Description,
+                    ModelPermission = role.ModelPermission.ToString(),
+                    MemberCount = members.Count,
+                    Members = members.Count > 0 ? string.Join(", ", members) : "-",
+                    TablePermissionCount = tablePermissions.Count,
+                    TablesWithFilters = tablesWithFilters.Count > 0 ? string.Join(", ", tablesWithFilters) : "-",
+                    HasRls = tablePermissionsWithFilters.Count > 0,
+                    HasOls = hasOls,
+                    FilterSummary = filterSummaryParts.Count > 0 ? string.Join(" | ", filterSummaryParts) : "-",
+                    ModifiedTime = role.ModifiedTime
+                });
+            }
+
+            server.Disconnect();
+            return roles
+                .OrderByDescending(r => r.HasRls)
+                .ThenBy(r => r.Name)
+                .ToList();
+        }, cancellationToken);
     }
 }

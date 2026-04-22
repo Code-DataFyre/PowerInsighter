@@ -57,6 +57,9 @@ public class MainViewModel : INotifyPropertyChanged
     private ObservableCollection<TableDetailInfo> _tableDetails = [];
     private ObservableCollection<TableDetailInfo> _filteredTableDetails = [];
     private string _tablesSearchText = string.Empty;
+    private ObservableCollection<RlsRoleInfo> _rlsRoles = [];
+    private ObservableCollection<RlsRoleInfo> _filteredRlsRoles = [];
+    private string _rlsSearchText = string.Empty;
 
     public ObservableCollection<BestPracticeViolation> BestPracticeViolations
     {
@@ -856,6 +859,69 @@ public class MainViewModel : INotifyPropertyChanged
         FilteredTableDetails = new ObservableCollection<TableDetailInfo>(filtered);
     }
 
+    // RLS Roles tab properties
+    public ObservableCollection<RlsRoleInfo> RlsRoles
+    {
+        get => _rlsRoles;
+        set
+        {
+            if (_rlsRoles != value)
+            {
+                _rlsRoles = value;
+                OnPropertyChanged();
+                ApplyRlsFilter();
+            }
+        }
+    }
+
+    public ObservableCollection<RlsRoleInfo> FilteredRlsRoles
+    {
+        get => _filteredRlsRoles;
+        set
+        {
+            if (_filteredRlsRoles != value)
+            {
+                _filteredRlsRoles = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public string RlsSearchText
+    {
+        get => _rlsSearchText;
+        set
+        {
+            if (_rlsSearchText != value)
+            {
+                _rlsSearchText = value;
+                OnPropertyChanged();
+                ApplyRlsFilter();
+            }
+        }
+    }
+
+    private void ApplyRlsFilter()
+    {
+        if (string.IsNullOrWhiteSpace(RlsSearchText))
+        {
+            FilteredRlsRoles = new ObservableCollection<RlsRoleInfo>(RlsRoles);
+            return;
+        }
+
+        var search = RlsSearchText.Trim();
+        var filtered = RlsRoles.Where(r =>
+            (r.Name?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.ModelPermission?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.Members?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.TablesWithFilters?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.FilterSummary?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+
+        FilteredRlsRoles = new ObservableCollection<RlsRoleInfo>(filtered);
+    }
+
     // Measures Column Visibility Properties
     public bool IsColumnSettingsOpen
     {
@@ -1289,6 +1355,7 @@ public class MainViewModel : INotifyPropertyChanged
 
     // Tables tab commands
     public ICommand ClearTablesSearchCommand { get; }
+    public ICommand ClearRlsSearchCommand { get; }
 
     public MainViewModel(IPowerBIService powerBIService)
     {
@@ -1328,6 +1395,7 @@ public class MainViewModel : INotifyPropertyChanged
 
         // Tables tab commands
         ClearTablesSearchCommand = new RelayCommand(async () => await Task.Run(() => TablesSearchText = string.Empty), () => true);
+        ClearRlsSearchCommand = new RelayCommand(async () => await Task.Run(() => RlsSearchText = string.Empty), () => true);
     }
 
     private void ExpandAllBPRules()
@@ -1527,6 +1595,11 @@ public class MainViewModel : INotifyPropertyChanged
             StatusMessage = $"Loading table details from {instance.DisplayName}...";
             var tableDetails = await _powerBIService.GetTableDetailsAsync(instance.Port, cancellationToken);
             TableDetails = new ObservableCollection<TableDetailInfo>(tableDetails);
+
+            // Load RLS roles
+            StatusMessage = $"Loading security roles from {instance.DisplayName}...";
+            var rlsRoles = await _powerBIService.GetRlsRolesAsync(instance.Port, cancellationToken);
+            RlsRoles = new ObservableCollection<RlsRoleInfo>(rlsRoles);
 
             // Load unused objects from the model
             StatusMessage = $"Analyzing unused objects in {instance.DisplayName}...";
@@ -2057,4 +2130,6 @@ public class RelayCommandWithParameter : ICommand
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
+
+
 

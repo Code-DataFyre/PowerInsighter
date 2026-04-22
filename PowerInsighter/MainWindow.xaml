@@ -241,6 +241,10 @@
                                     </StackPanel>
                                     <TextBlock Text="{Binding ModelOverview.UniqueSourceTypesCount}" FontSize="28" FontWeight="Bold" Foreground="#B4009E"/>
                                 </StackPanel>
+                                <StackPanel Grid.Column="2" Grid.Row="2" Margin="10">
+                                    <TextBlock Text="Roles" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.RoleCount}" FontSize="28" FontWeight="Bold" Foreground="#0063B1"/>
+                                </StackPanel>
                             </Grid>
                         </Border>
 
@@ -790,6 +794,455 @@
                                     </Setter>
                                     <Style.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E8F5FD"/>
+                                            <Setter Property="Foreground" Value="#000"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#F0F0F0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F8F9FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E8F5FD"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#FAFAFA"/>
+                                    <Setter Property="Foreground" Value="#666"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="12,14"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                </Style>
+                            </DataGrid.Resources>
+
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="RULE" Width="220" Binding="{Binding RuleName}"/>
+                                <DataGridTextColumn Header="CATEGORY" Width="160" Binding="{Binding Category}"/>
+                                <DataGridTextColumn Header="SEVERITY" Width="110" Binding="{Binding Severity}"/>
+                                <DataGridTextColumn Header="TYPE" Width="120" Binding="{Binding ObjectType}"/>
+                                <DataGridTextColumn Header="OBJECT" Width="220" Binding="{Binding ObjectName}"/>
+                                <DataGridTextColumn Header="TABLE" Width="140" Binding="{Binding TableName}"/>
+                                <DataGridTextColumn Header="DESCRIPTION" Width="*" MinWidth="250" Binding="{Binding Description}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+            
+            <!-- RLS Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🔒" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="RLS" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel>
+                                <TextBlock Text="Row-Level Security" FontSize="22" FontWeight="Bold"/>
+                                <TextBlock Text="Roles, members, table filters, and object-level security information" Foreground="Gray" FontSize="12"/>
+                            </StackPanel>
+                            <Border Background="#E8F4FD" CornerRadius="12" Padding="10,4" Margin="15,4,0,0" VerticalAlignment="Top">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#0063B1">
+                                    <Run Text="{Binding FilteredRlsRoles.Count, Mode=OneWay}"/>
+                                    <Run Text=" of "/>
+                                    <Run Text="{Binding RlsRoles.Count, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+
+                        <Border Grid.Column="2"
+                                Background="White"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,6"
+                                Width="320"
+                                VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding RlsSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         BorderThickness="0"
+                                         FontSize="13"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                                <VisualBrush.Visual>
+                                                                    <TextBlock Text="Search RLS roles..." Foreground="#999" FontSize="13"/>
+                                                                </VisualBrush.Visual>
+                                                            </VisualBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <Button Grid.Column="2"
+                                        Content="✕"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        FontSize="12"
+                                        Foreground="#999"
+                                        Cursor="Hand"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding RlsSearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Command="{Binding ClearRlsSearchCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="1"
+                            Background="White"
+                            BorderBrush="#E0E0E0"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="0">
+                        <DataGrid ItemsSource="{Binding FilteredRlsRoles}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  RowHeight="48"
+                                  CanUserResizeRows="False"
+                                  CanUserResizeColumns="True"
+                                  SelectionMode="Single"
+                                  SelectionUnit="FullRow"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True">
+                            <DataGrid.Resources>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Padding" Value="12,0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E8F4FD"/>
+                                            <Setter Property="Foreground" Value="#000"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#F0F0F0"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#F8F9FA"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#E8F4FD"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#FAFAFA"/>
+                                    <Setter Property="Foreground" Value="#666"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="12,14"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                </Style>
+                            </DataGrid.Resources>
+
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="S.NO" Width="60" MinWidth="50" MaxWidth="80" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontWeight="SemiBold" Foreground="#888" HorizontalAlignment="Center">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource RowNumberConverter}">
+                                                        <Binding />
+                                                        <Binding Path="DataContext.FilteredRlsRoles" RelativeSource="{RelativeSource AncestorType=DataGrid}"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="ROLE" Width="180" MinWidth="120" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Background="#0063B1" Width="4" Height="20" CornerRadius="2" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="PERMISSION" Width="120" MinWidth="90" SortMemberPath="ModelPermission">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#E8F5E9" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding ModelPermission}" FontSize="12" Foreground="#107C10" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="MEMBERS" Width="80" Binding="{Binding MemberCount}"/>
+                                <DataGridTextColumn Header="TABLE FILTERS" Width="90" Binding="{Binding TablePermissionCount}"/>
+                                <DataGridTextColumn Header="ASSIGNED MEMBERS" Width="220" Binding="{Binding Members}"/>
+                                <DataGridTextColumn Header="FILTER TABLES" Width="180" Binding="{Binding TablesWithFilters}"/>
+                                <DataGridTextColumn Header="FILTER SUMMARY" Width="*" MinWidth="220" Binding="{Binding FilterSummary}"/>
+
+                                <DataGridTemplateColumn Header="RLS" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="-"/>
+                                                        <Setter Property="Foreground" Value="#999"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasRls}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                                <Setter Property="Foreground" Value="#107C10"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="OLS" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="-"/>
+                                                        <Setter Property="Foreground" Value="#999"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasOls}" Value="True">
+                                                                <Setter Property="Text" Value="Yes"/>
+                                                                <Setter Property="Foreground" Value="#E81123"/>
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="DESCRIPTION" Width="220" Binding="{Binding Description}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Best Practices Tab -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✅" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Best Practices" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header with Title, Count, and Search Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel>
+                                <TextBlock Text="Model Best Practices" FontSize="22" FontWeight="Bold"/>
+                                <TextBlock Text="Best Practice Analyzer (BPA) rules from Microsoft / community" Foreground="Gray" FontSize="12"/>
+                            </StackPanel>
+                            <Border Background="#E8F5E9" CornerRadius="12" Padding="10,4" Margin="15,4,0,0" VerticalAlignment="Top">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="#107C10">
+                                    <Run Text="{Binding FilteredBestPracticeViolations.Count, Mode=OneWay}"/>
+                                    <Run Text=" of "/>
+                                    <Run Text="{Binding BestPracticeViolations.Count, Mode=OneWay}"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+
+                        <Border Grid.Column="2"
+                                Background="White"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,6"
+                                Width="320"
+                                VerticalAlignment="Center">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="📥" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding BestPracticesSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         BorderThickness="0"
+                                         FontSize="13"
+                                         VerticalAlignment="Center"
+                                         Background="Transparent">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="Text" Value="">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <VisualBrush Stretch="None" AlignmentX="Left">
+                                                                <VisualBrush.Visual>
+                                                                    <TextBlock Text="Search best practices..." Foreground="#999" FontSize="13"/>
+                                                                </VisualBrush.Visual>
+                                                            </VisualBrush>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <Button Grid.Column="2"
+                                        Content="Γ£ò"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        FontSize="12"
+                                        Foreground="#999"
+                                        Cursor="Hand"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding BestPracticesSearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Command="{Binding ClearBestPracticesSearchCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="#333"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Grid -->
+                    <Border Grid.Row="1"
+                            Background="White"
+                            BorderBrush="#E0E0E0"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="0">
+                        <DataGrid ItemsSource="{Binding FilteredBestPracticeViolations}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  GridLinesVisibility="None"
+                                  HeadersVisibility="Column"
+                                  RowHeight="48"
+                                  CanUserResizeRows="False"
+                                  CanUserResizeColumns="True"
+                                  SelectionMode="Single"
+                                  SelectionUnit="FullRow"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="True">
+
+                            <DataGrid.Resources>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Padding" Value="12,0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
                                             <Setter Property="Background" Value="#E8F5E9"/>
                                             <Setter Property="Foreground" Value="#000"/>
                                         </Trigger>
@@ -839,7 +1292,7 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📐" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="📊" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Measures" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
@@ -889,7 +1342,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <TextBlock Grid.Column="0" 
-                                           Text="🔍" 
+                                           Text="📥" 
                                            FontSize="14" 
                                            VerticalAlignment="Center" 
                                            Margin="0,0,8,0"/>
@@ -922,7 +1375,7 @@
                                 </TextBox>
                                 
                                 <Button Grid.Column="2" 
-                                        Content="✕" 
+                                        Content="Γ£ò" 
                                         Background="Transparent" 
                                         BorderThickness="0"
                                         FontSize="12"
@@ -964,7 +1417,7 @@
                                                 <Border Background="{TemplateBinding Background}" 
                                                         Padding="{TemplateBinding Padding}"
                                                         CornerRadius="4">
-                                                    <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="ΓÜÖ∩╕Å" FontSize="18" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -1500,7 +1953,7 @@
                                                                                     Background="Transparent" 
                                                                                     CornerRadius="4"
                                                                                     Padding="4">
-                                                                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                                                <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center"/>
                                                                             </Border>
                                                                             <ControlTemplate.Triggers>
                                                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -1780,7 +2233,7 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Columns" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
@@ -1829,7 +2282,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <TextBlock Grid.Column="0" 
-                                           Text="🔍" 
+                                           Text="📥" 
                                            FontSize="14" 
                                            VerticalAlignment="Center" 
                                            Margin="0,0,8,0"/>
@@ -1862,7 +2315,7 @@
                                 </TextBox>
                                 
                                 <Button Grid.Column="2" 
-                                        Content="✕" 
+                                        Content="Γ£ò" 
                                         Background="Transparent" 
                                         BorderThickness="0"
                                         FontSize="12"
@@ -1904,7 +2357,7 @@
                                                 <Border Background="{TemplateBinding Background}" 
                                                         Padding="{TemplateBinding Padding}"
                                                         CornerRadius="4">
-                                                    <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="ΓÜÖ∩╕Å" FontSize="18" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -2298,7 +2751,7 @@
                                                                     <Setter.Value>
                                                                         <ControlTemplate TargetType="Button">
                                                                             <Border x:Name="BtnBorder" Background="Transparent" CornerRadius="4" Padding="4">
-                                                                                <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                                                <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center"/>
                                                                             </Border>
                                                                             <ControlTemplate.Triggers>
                                                                                 <Trigger Property="IsMouseOver" Value="True">
@@ -2652,7 +3105,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <TextBlock Grid.Column="0" 
-                                           Text="🔍" 
+                                           Text="📥" 
                                            FontSize="14" 
                                            VerticalAlignment="Center" 
                                            Margin="0,0,8,0"/>
@@ -2685,7 +3138,7 @@
                                 </TextBox>
                                 
                                 <Button Grid.Column="2" 
-                                        Content="✕" 
+                                        Content="Γ£ò" 
                                         Background="Transparent" 
                                         BorderThickness="0"
                                         FontSize="12"
@@ -2727,7 +3180,7 @@
                                                 <Border Background="{TemplateBinding Background}" 
                                                         Padding="{TemplateBinding Padding}"
                                                         CornerRadius="4">
-                                                    <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="ΓÜÖ∩╕Å" FontSize="18" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -3009,7 +3462,7 @@
                                 <DataGridTemplateColumn Header="" Width="40" MinWidth="40" MaxWidth="40" CanUserResize="False">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="→" FontSize="16" FontWeight="Bold" Foreground="#E81123" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="ΓåÆ" FontSize="16" FontWeight="Bold" Foreground="#E81123" HorizontalAlignment="Center"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -3284,7 +3737,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0"
-                                           Text="🔍"
+                                           Text="📥"
                                            FontSize="14"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"/>
@@ -3317,7 +3770,7 @@
                                 </TextBox>
 
                                 <Button Grid.Column="2"
-                                        Content="✕"
+                                        Content="Γ£ò"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         FontSize="12"
@@ -3524,7 +3977,7 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠️" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="ΓÜá∩╕Å" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBlock Text="Unused Objects" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
@@ -3571,7 +4024,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0"
-                                           Text="🔍"
+                                           Text="📥"
                                            FontSize="14"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"/>
@@ -3604,7 +4057,7 @@
                                 </TextBox>
 
                                 <Button Grid.Column="2"
-                                        Content="✕"
+                                        Content="Γ£ò"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         FontSize="12"
@@ -3853,7 +4306,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0"
-                                           Text="🔍"
+                                           Text="📥"
                                            FontSize="14"
                                            VerticalAlignment="Center"
                                            Margin="0,0,8,0"/>
@@ -3886,7 +4339,7 @@
                                 </TextBox>
 
                                 <Button Grid.Column="2"
-                                        Content="✕"
+                                        Content="Γ£ò"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         FontSize="12"
@@ -4152,11 +4605,11 @@
                 <TextBlock Text="Features:" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
                 <StackPanel Margin="20,0,0,0">
                     <TextBlock Text="📊 Model Overview - Get a quick summary of your model" Margin="0,5"/>
-                    <TextBlock Text="📐 Measures - View all measures and their expressions" Margin="0,5"/>
-                    <TextBlock Text="📋 Columns - Explore columns and calculated columns" Margin="0,5"/>
+                    <TextBlock Text="📊 Measures - View all measures and their expressions" Margin="0,5"/>
+                    <TextBlock Text="👁 Columns - Explore columns and calculated columns" Margin="0,5"/>
                     <TextBlock Text="🔗 Relationships - Analyze table relationships" Margin="0,5"/>
                     <TextBlock Text="🔄 Dependencies - Understand object dependencies" Margin="0,5"/>
-                    <TextBlock Text="⚠️ Unused Objects - Find optimization opportunities" Margin="0,5"/>
+                    <TextBlock Text="ΓÜá∩╕Å Unused Objects - Find optimization opportunities" Margin="0,5"/>
                     <TextBlock Text="💥 Impact Analysis - Assess change impacts" Margin="0,5"/>
                 </StackPanel>
             </StackPanel>
@@ -4222,7 +4675,7 @@
                                                             Background="Transparent" 
                                                             CornerRadius="4"
                                                             Padding="6">
-                                                        <TextBlock Text="✕" 
+                                                        <TextBlock Text="Γ£ò" 
                                                                    FontSize="16" 
                                                                    FontWeight="Bold"
                                                                    Foreground="White"/>
@@ -4278,7 +4731,7 @@
                                            FontSize="12" 
                                            Foreground="#666"
                                            VerticalAlignment="Center"/>
-                                <TextBlock Text=" • " 
+                                <TextBlock Text=" ΓÇó " 
                                            FontSize="12" 
                                            Foreground="#999"
                                            VerticalAlignment="Center"
@@ -4307,7 +4760,7 @@
                                                             CornerRadius="6"
                                                             Padding="16,8">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="✨" FontSize="14" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Γ£¿" FontSize="14" VerticalAlignment="Center"/>
                                                             <TextBlock Text="Format" 
                                                                        FontSize="13" 
                                                                        FontWeight="SemiBold"
@@ -4349,7 +4802,7 @@
                                                             CornerRadius="6"
                                                             Padding="16,8">
                                                         <StackPanel Orientation="Horizontal">
-                                                            <TextBlock Text="📋" FontSize="14" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="👁" FontSize="14" VerticalAlignment="Center"/>
                                                             <TextBlock Text="Copy DAX" 
                                                                        FontSize="13" 
                                                                        FontWeight="SemiBold"

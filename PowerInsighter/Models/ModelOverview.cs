@@ -12,6 +12,7 @@ public class ModelOverview
     public long ModelSize { get; init; }
     public DateTime? LastRefresh { get; init; }
     public string? CompatibilityLevel { get; init; }
+    public int RoleCount { get; init; }
 
     // Additional useful properties
     public int HiddenTableCount { get; init; }
