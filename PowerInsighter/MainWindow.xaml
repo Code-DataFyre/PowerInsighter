@@ -184,6 +184,7 @@
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <!-- Row 1 -->
@@ -214,12 +215,137 @@
                                     <TextBlock Text="{Binding ModelOverview.CalculatedTableCount}" FontSize="28" FontWeight="Bold" Foreground="#008080"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Grid.Row="1" Margin="10">
-                                    <TextBlock Text="Compatibility Level" Foreground="Gray" FontSize="12"/>
-                                    <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="20" FontWeight="Bold" Foreground="#666666"/>
+                                    <TextBlock Text="Calculation Groups" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.CalculationGroupCount}" FontSize="28" FontWeight="Bold" Foreground="#8764B8"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="3" Grid.Row="1" Margin="10">
                                     <TextBlock Text="Partitions" Foreground="Gray" FontSize="12"/>
                                     <TextBlock Text="{Binding ModelOverview.PartitionCount}" FontSize="28" FontWeight="Bold" Foreground="#D83B01"/>
+                                </StackPanel>
+
+                                <!-- Row 3 -->
+                                <StackPanel Grid.Column="0" Grid.Row="2" Margin="10">
+                                    <TextBlock Text="Compatibility Level" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="20" FontWeight="Bold" Foreground="#666666"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Memory Usage / Dictionary Size -->
+                        <TextBlock Text="Storage &amp; Memory" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Row 1: File Size -->
+                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="10">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="File Size (.pbix)" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="11" Margin="5,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel MaxWidth="300">
+                                                        <TextBlock Text="📦 File Size" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                        <TextBlock TextWrapping="Wrap" Text="The compressed size of the .pbix file on disk. This includes the data model, report pages, visuals, and metadata - all compressed together."/>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#0078D4">
+                                        <Run Text="{Binding ModelOverview.FileSize, Converter={StaticResource BytesToMBConverter}, Mode=OneWay}"/>
+                                        <Run Text=" MB" FontSize="14"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Grid.Row="0" Margin="10">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="Model Size (Memory)" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="11" Margin="5,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel MaxWidth="300">
+                                                        <TextBlock Text="💾 In-Memory Model Size" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                        <TextBlock TextWrapping="Wrap" Text="The size of the data model loaded in Analysis Services memory. This is the decompressed model with dictionary compression applied for fast query performance."/>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#107C10">
+                                        <Run Text="{Binding ModelOverview.ModelSize, Converter={StaticResource BytesToMBConverter}, Mode=OneWay}"/>
+                                        <Run Text=" MB" FontSize="14"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="10">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="Dictionary Size" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="11" Margin="5,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel MaxWidth="300">
+                                                        <TextBlock Text="📖 Dictionary Size" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                        <TextBlock TextWrapping="Wrap" Text="The size of column dictionaries in memory. Power BI uses dictionary encoding to compress repeated values, storing unique values once and using integer references elsewhere."/>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#5C2D91">
+                                        <Run Text="{Binding ModelOverview.TotalDictionarySize, Converter={StaticResource BytesToMBConverter}, Mode=OneWay}"/>
+                                        <Run Text=" MB" FontSize="14"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="3" Grid.Row="0" Margin="10">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="Data Size" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="11" Margin="5,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel MaxWidth="300">
+                                                        <TextBlock Text="📊 Data Size" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                        <TextBlock TextWrapping="Wrap" Text="The actual data storage size including column data after dictionary compression. This represents the bulk of your model's memory footprint."/>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#E81123">
+                                        <Run Text="{Binding ModelOverview.TotalDataSize, Converter={StaticResource BytesToMBConverter}, Mode=OneWay}"/>
+                                        <Run Text=" MB" FontSize="14"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Row 2: Hierarchies Size -->
+                                <StackPanel Grid.Column="0" Grid.Row="1" Margin="10">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                        <TextBlock Text="Hierarchies Overhead" Foreground="Gray" FontSize="12"/>
+                                        <TextBlock Text=" ℹ️" FontSize="11" Margin="5,0,0,0" Cursor="Help">
+                                            <TextBlock.ToolTip>
+                                                <ToolTip>
+                                                    <StackPanel MaxWidth="300">
+                                                        <TextBlock Text="🌲 Hierarchies Size" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                        <TextBlock TextWrapping="Wrap" Text="Additional memory used by hierarchies in your model. Hierarchies add metadata overhead but enable drill-down capabilities in reports."/>
+                                                    </StackPanel>
+                                                </ToolTip>
+                                            </TextBlock.ToolTip>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#8764B8">
+                                        <Run Text="{Binding ModelOverview.TotalHierarchiesSize, Converter={StaticResource BytesToMBConverter}, Mode=OneWay}"/>
+                                        <Run Text=" MB" FontSize="14"/>
+                                    </TextBlock>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -263,7 +389,6 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Default Mode:" FontWeight="SemiBold" Margin="0,5"/>
@@ -272,20 +397,14 @@
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Culture:" FontWeight="SemiBold" Margin="0,5"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ModelOverview.Culture}" Margin="10,5"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Model Size:" FontWeight="SemiBold" Margin="0,5"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" Margin="10,5">
-                                    <Run Text="{Binding ModelOverview.ModelSize, StringFormat='{}{0:N0}'}"/>
-                                    <Run Text=" bytes"/>
-                                </TextBlock>
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Last Refresh:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ModelOverview.LastRefresh, StringFormat='{}{0:g}'}" Margin="10,5"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Refresh:" FontWeight="SemiBold" Margin="0,5"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ModelOverview.LastRefresh, StringFormat='{}{0:g}'}" Margin="10,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Created:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ModelOverview.CreatedTimestamp, StringFormat='{}{0:g}'}" Margin="10,5"/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Created:" FontWeight="SemiBold" Margin="0,5"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ModelOverview.CreatedTimestamp, StringFormat='{}{0:g}'}" Margin="10,5"/>
-
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Structure Modified:" FontWeight="SemiBold" Margin="0,5"/>
-                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ModelOverview.StructureModifiedTime, StringFormat='{}{0:g}'}" Margin="10,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Structure Modified:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ModelOverview.StructureModifiedTime, StringFormat='{}{0:g}'}" Margin="10,5"/>
                             </Grid>
                         </Border>
                     </StackPanel>

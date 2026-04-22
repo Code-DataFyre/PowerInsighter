@@ -17,6 +17,13 @@ public class PowerBIService : IPowerBIService
     private const int MaxScannedPorts = 5;
     private const int PortCheckTimeoutMs = 100;
 
+    private readonly DmvQueryService _dmvQueryService;
+
+    public PowerBIService()
+    {
+        _dmvQueryService = new DmvQueryService();
+    }
+
     public bool IsPowerBIRunning()
     {
         try
@@ -61,7 +68,8 @@ public class PowerBIService : IPowerBIService
                                     Port = port,
                                     ProcessId = parentId,
                                     WindowTitle = GetProcessWindowTitle(parentProcess),
-                                    FileName = GetPowerBIFileName(parentProcess)
+                                    FileName = GetPowerBIFileName(parentProcess),
+                                    FilePath = GetPowerBIFilePath(parentProcess)
                                 };
 
                                 instances.Add(instance);
@@ -262,6 +270,49 @@ public class PowerBIService : IPowerBIService
         }
     }
 
+    private static string? GetPowerBIFilePath(Process process)
+    {
+        try
+        {
+            // Try to get the file path from the process main module
+            // Power BI Desktop opens the .pbix file, we need to search for recent files
+            var fileName = GetPowerBIFileName(process);
+            if (string.IsNullOrEmpty(fileName))
+                return null;
+
+            // Common locations where .pbix files might be
+            var searchPaths = new[]
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+            };
+
+            // Search for the file in common locations
+            foreach (var basePath in searchPaths)
+            {
+                if (Directory.Exists(basePath))
+                {
+                    var pbixFiles = Directory.GetFiles(basePath, "*.pbix", SearchOption.AllDirectories)
+                        .Where(f => Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase))
+                        .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+                        .FirstOrDefault();
+
+                    if (pbixFiles != null)
+                        return pbixFiles;
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting file path: {ex.Message}");
+            return null;
+        }
+    }
+
     private static List<int> GetPowerBIPortsFromFiles()
     {
         var ports = new List<int>();
@@ -294,34 +345,97 @@ public class PowerBIService : IPowerBIService
         return ports;
     }
 
-    public async Task<ModelOverview> GetModelOverviewAsync(int port, string? reportName = null, CancellationToken cancellationToken = default)
+    public async Task<ModelOverview> GetModelOverviewAsync(int port, string? reportName = null, string? filePath = null, CancellationToken cancellationToken = default)
     {
-        return await Task.Run(() =>
+        using var server = new Server();
+        server.Connect($"DataSource=localhost:{port}");
+
+        if (server.Databases.Count == 0)
+            throw new InvalidOperationException("No databases found.");
+
+        var database = server.Databases[0];
+        var model = database.Model;
+
+        var tableCount = model.Tables.Count;
+        var measureCount = model.Tables.Sum(t => t.Measures.Count);
+        var columnCount = model.Tables.Sum(t => t.Columns.Count);
+        var relationshipCount = model.Relationships.Count;
+        var calculatedColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.Type == ColumnType.Calculated));
+        var calculatedTableCount = model.Tables.Count(t => t.Partitions.Any(p => p.SourceType == PartitionSourceType.Calculated));
+
+        // Get .pbix file size from disk
+        long fileSize = 0;
+        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
         {
-            using var server = new Server();
-            server.Connect($"DataSource=localhost:{port}");
+            try
+            {
+                var fileInfo = new FileInfo(filePath);
+                fileSize = fileInfo.Length;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Could not get file size: {ex.Message}");
+            }
+        }
 
-            if (server.Databases.Count == 0)
-                throw new InvalidOperationException("No databases found.");
+        // Additional statistics
+        var hiddenTableCount = model.Tables.Count(t => t.IsHidden);
+        var hiddenMeasureCount = model.Tables.Sum(t => t.Measures.Count(m => m.IsHidden));
+        var hiddenColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.IsHidden));
+        var partitionCount = model.Tables.Sum(t => t.Partitions.Count);
 
-            var database = server.Databases[0];
-            var model = database.Model;
+        // Calculation Groups (available in compatibility level 1500+)
+        var calculationGroupCount = 0;
+        try
+        {
+            calculationGroupCount = model.Tables.Count(t => t.CalculationGroup != null);
+        }
+        catch
+        {
+            // CalculationGroup property may not be available in older models
+        }
 
-            var tableCount = model.Tables.Count;
-            var measureCount = model.Tables.Sum(t => t.Measures.Count);
-            var columnCount = model.Tables.Sum(t => t.Columns.Count);
-            var relationshipCount = model.Relationships.Count;
-            var calculatedColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.Type == ColumnType.Calculated));
-            var calculatedTableCount = model.Tables.Count(t => t.Partitions.Any(p => p.SourceType == PartitionSourceType.Calculated));
+        // Get accurate storage statistics from DMV queries
+        long totalDictionarySize = 0;
+        long totalDataSize = 0;
+        long totalHierarchiesSize = 0;
 
-            // Additional statistics
-            var hiddenTableCount = model.Tables.Count(t => t.IsHidden);
-            var hiddenMeasureCount = model.Tables.Sum(t => t.Measures.Count(m => m.IsHidden));
-            var hiddenColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.IsHidden));
-            var partitionCount = model.Tables.Sum(t => t.Partitions.Count);
+        try
+        {
+            Debug.WriteLine("Querying DMV for accurate storage statistics...");
+            var storageStats = await _dmvQueryService.GetStorageStatisticsAsync(port, cancellationToken);
 
-            // Use reportName if provided, otherwise fall back to model.Name or database.Name
-            var modelName = !string.IsNullOrEmpty(reportName) ? reportName : (model.Name ?? database.Name);
+            if (storageStats != null)
+            {
+                totalDictionarySize = storageStats.TotalDictionarySize;
+                totalDataSize = storageStats.TotalDataSize;
+                totalHierarchiesSize = storageStats.TotalHierarchiesSize;
+
+                Debug.WriteLine($"DMV Statistics - Dictionary: {totalDictionarySize:N0} bytes, Data: {totalDataSize:N0} bytes, Hierarchies: {totalHierarchiesSize:N0} bytes");
+            }
+            else
+            {
+                // Fallback to estimated size if DMV query fails
+                Debug.WriteLine("DMV query failed, using fallback estimated size");
+                totalDictionarySize = database.EstimatedSize;
+                totalDataSize = database.EstimatedSize;
+
+                var hierarchyCount = model.Tables.Sum(t => t.Hierarchies.Count);
+                totalHierarchiesSize = hierarchyCount * 1024; // 1KB per hierarchy estimate
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting storage statistics: {ex.Message}");
+            // Fallback to estimated size
+            totalDictionarySize = database.EstimatedSize;
+            totalDataSize = database.EstimatedSize;
+            var hierarchyCount = model.Tables.Sum(t => t.Hierarchies.Count);
+            totalHierarchiesSize = hierarchyCount * 1024;
+        }
+
+        // Use reportName if provided, otherwise fall back to model.Name or database.Name
+        var modelName = !string.IsNullOrEmpty(reportName) ? reportName : (model.Name ?? database.Name);
 
             var overview = new ModelOverview
             {
@@ -342,12 +456,17 @@ public class PowerBIService : IPowerBIService
                 DefaultMode = model.DefaultMode.ToString(),
                 Culture = model.Culture,
                 CreatedTimestamp = database.CreatedTimestamp,
-                StructureModifiedTime = model.ModifiedTime
+                StructureModifiedTime = model.ModifiedTime,
+                CalculationGroupCount = calculationGroupCount,
+                TotalDictionarySize = totalDictionarySize,
+                TotalDataSize = totalDataSize,
+                TotalHierarchiesSize = totalHierarchiesSize,
+                FileSize = fileSize,
+                FilePath = filePath
             };
 
-            server.Disconnect();
-            return overview;
-        }, cancellationToken);
+        server.Disconnect();
+        return overview;
     }
 
     public async Task<List<MeasureInfo>> GetMeasuresAsync(int port, CancellationToken cancellationToken = default)
@@ -622,5 +741,25 @@ public class PowerBIService : IPowerBIService
             server.Disconnect();
             return unusedObjects;
         }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets detailed storage statistics from DMV queries.
+    /// This provides accurate per-column dictionary size, data size, and more.
+    /// </summary>
+    /// <param name="port">The port number of the Analysis Services instance</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Detailed storage statistics or null if query fails</returns>
+    public async Task<StorageStatistics?> GetStorageStatisticsAsync(int port, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _dmvQueryService.GetStorageStatisticsAsync(port, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in GetStorageStatisticsAsync: {ex.Message}");
+            return null;
+        }
     }
 }

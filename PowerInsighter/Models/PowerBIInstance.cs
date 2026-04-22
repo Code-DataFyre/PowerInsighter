@@ -7,7 +7,8 @@ public class PowerBIInstance
     public string? FileName { get; init; }
     public string? WindowTitle { get; init; }
     public DateTime? LastModified { get; init; }
-    
+    public string? FilePath { get; init; }  // Full path to .pbix file
+
     public string DisplayName => !string.IsNullOrEmpty(FileName) 
         ? $"{FileName} (Port: {Port})" 
         : !string.IsNullOrEmpty(WindowTitle)

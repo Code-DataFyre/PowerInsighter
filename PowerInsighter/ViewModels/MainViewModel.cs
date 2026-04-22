@@ -1434,7 +1434,7 @@ public class MainViewModel : INotifyPropertyChanged
         {
             // Load model overview
             StatusMessage = $"Loading model overview from {instance.DisplayName}...";
-            ModelOverview = await _powerBIService.GetModelOverviewAsync(instance.Port, instance.FileName, cancellationToken);
+            ModelOverview = await _powerBIService.GetModelOverviewAsync(instance.Port, instance.FileName, instance.FilePath, cancellationToken);
             
             // Load measures with all properties including Description
             StatusMessage = $"Loading measures from {instance.DisplayName}...";

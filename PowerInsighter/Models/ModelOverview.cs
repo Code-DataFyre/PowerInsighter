@@ -22,4 +22,14 @@ public class ModelOverview
     public string? Culture { get; init; }
     public DateTime? CreatedTimestamp { get; init; }
     public DateTime? StructureModifiedTime { get; init; }
+
+    // New properties
+    public int CalculationGroupCount { get; init; }
+    public long TotalDictionarySize { get; init; }
+    public long TotalDataSize { get; init; }
+    public long TotalHierarchiesSize { get; init; }
+
+    // File size properties
+    public long FileSize { get; init; }  // .pbix file size on disk
+    public string? FilePath { get; init; }  // Path to the .pbix file
 }
