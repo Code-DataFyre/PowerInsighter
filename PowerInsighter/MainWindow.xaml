@@ -163,7 +163,16 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
                     <StackPanel>
                         <TextBlock Text="Model Overview" FontSize="20" FontWeight="Bold" Margin="0,0,0,15"/>
-                        
+
+                        <!-- Model Name Section -->
+                        <Border Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Model Name" FontSize="14" FontWeight="SemiBold" Foreground="Gray" Margin="0,0,0,5"/>
+                                <TextBlock Text="{Binding ModelOverview.ModelName}" FontSize="22" FontWeight="Bold" Foreground="#0078D4" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Main Statistics -->
                         <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -176,7 +185,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                
+
                                 <!-- Row 1 -->
                                 <StackPanel Grid.Column="0" Grid.Row="0" Margin="10">
                                     <TextBlock Text="Tables" Foreground="Gray" FontSize="12"/>
@@ -194,7 +203,7 @@
                                     <TextBlock Text="Relationships" Foreground="Gray" FontSize="12"/>
                                     <TextBlock Text="{Binding ModelOverview.RelationshipCount}" FontSize="28" FontWeight="Bold" Foreground="#E81123"/>
                                 </StackPanel>
-                                
+
                                 <!-- Row 2 -->
                                 <StackPanel Grid.Column="0" Grid.Row="1" Margin="10">
                                     <TextBlock Text="Calculated Columns" Foreground="Gray" FontSize="12"/>
@@ -206,17 +215,79 @@
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Grid.Row="1" Margin="10">
                                     <TextBlock Text="Compatibility Level" Foreground="Gray" FontSize="12"/>
-                                    <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="28" FontWeight="Bold" Foreground="#666666"/>
+                                    <TextBlock Text="{Binding ModelOverview.CompatibilityLevel}" FontSize="20" FontWeight="Bold" Foreground="#666666"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="3" Grid.Row="1" Margin="10">
-                                    <TextBlock Text="Last Refresh" Foreground="Gray" FontSize="12"/>
-                                    <TextBlock Text="{Binding ModelOverview.LastRefresh, StringFormat='{}{0:g}'}" FontSize="16" FontWeight="SemiBold" Foreground="#666666"/>
+                                    <TextBlock Text="Partitions" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.PartitionCount}" FontSize="28" FontWeight="Bold" Foreground="#D83B01"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
-                        
-                        <TextBlock Text="Model Name" FontSize="14" FontWeight="SemiBold" Margin="0,10,0,5"/>
-                        <TextBlock Text="{Binding ModelOverview.ModelName}" FontSize="16" Foreground="#333"/>
+
+                        <!-- Hidden Objects Statistics -->
+                        <TextBlock Text="Hidden Objects" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="10">
+                                    <TextBlock Text="Hidden Tables" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.HiddenTableCount}" FontSize="24" FontWeight="Bold" Foreground="#605E5C"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="10">
+                                    <TextBlock Text="Hidden Measures" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.HiddenMeasureCount}" FontSize="24" FontWeight="Bold" Foreground="#605E5C"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="10">
+                                    <TextBlock Text="Hidden Columns" Foreground="Gray" FontSize="12"/>
+                                    <TextBlock Text="{Binding ModelOverview.HiddenColumnCount}" FontSize="24" FontWeight="Bold" Foreground="#605E5C"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Model Metadata -->
+                        <TextBlock Text="Model Metadata" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Default Mode:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ModelOverview.DefaultMode}" Margin="10,5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Culture:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ModelOverview.Culture}" Margin="10,5"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Model Size:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Margin="10,5">
+                                    <Run Text="{Binding ModelOverview.ModelSize, StringFormat='{}{0:N0}'}"/>
+                                    <Run Text=" bytes"/>
+                                </TextBlock>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Refresh:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ModelOverview.LastRefresh, StringFormat='{}{0:g}'}" Margin="10,5"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Created:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ModelOverview.CreatedTimestamp, StringFormat='{}{0:g}'}" Margin="10,5"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Structure Modified:" FontWeight="SemiBold" Margin="0,5"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ModelOverview.StructureModifiedTime, StringFormat='{}{0:g}'}" Margin="10,5"/>
+                            </Grid>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

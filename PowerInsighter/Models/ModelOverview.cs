@@ -12,4 +12,14 @@ public class ModelOverview
     public long ModelSize { get; init; }
     public DateTime? LastRefresh { get; init; }
     public string? CompatibilityLevel { get; init; }
+
+    // Additional useful properties
+    public int HiddenTableCount { get; init; }
+    public int HiddenMeasureCount { get; init; }
+    public int HiddenColumnCount { get; init; }
+    public int PartitionCount { get; init; }
+    public string? DefaultMode { get; init; }
+    public string? Culture { get; init; }
+    public DateTime? CreatedTimestamp { get; init; }
+    public DateTime? StructureModifiedTime { get; init; }
 }

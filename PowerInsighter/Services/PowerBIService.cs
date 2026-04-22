@@ -294,7 +294,7 @@ public class PowerBIService : IPowerBIService
         return ports;
     }
 
-    public async Task<ModelOverview> GetModelOverviewAsync(int port, CancellationToken cancellationToken = default)
+    public async Task<ModelOverview> GetModelOverviewAsync(int port, string? reportName = null, CancellationToken cancellationToken = default)
     {
         return await Task.Run(() =>
         {
@@ -314,9 +314,18 @@ public class PowerBIService : IPowerBIService
             var calculatedColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.Type == ColumnType.Calculated));
             var calculatedTableCount = model.Tables.Count(t => t.Partitions.Any(p => p.SourceType == PartitionSourceType.Calculated));
 
+            // Additional statistics
+            var hiddenTableCount = model.Tables.Count(t => t.IsHidden);
+            var hiddenMeasureCount = model.Tables.Sum(t => t.Measures.Count(m => m.IsHidden));
+            var hiddenColumnCount = model.Tables.Sum(t => t.Columns.Count(c => c.IsHidden));
+            var partitionCount = model.Tables.Sum(t => t.Partitions.Count);
+
+            // Use reportName if provided, otherwise fall back to model.Name or database.Name
+            var modelName = !string.IsNullOrEmpty(reportName) ? reportName : (model.Name ?? database.Name);
+
             var overview = new ModelOverview
             {
-                ModelName = database.Name,
+                ModelName = modelName,
                 TableCount = tableCount,
                 MeasureCount = measureCount,
                 ColumnCount = columnCount,
@@ -325,7 +334,15 @@ public class PowerBIService : IPowerBIService
                 CalculatedTableCount = calculatedTableCount,
                 ModelSize = database.EstimatedSize,
                 LastRefresh = database.LastUpdate,
-                CompatibilityLevel = database.CompatibilityLevel.ToString()
+                CompatibilityLevel = database.CompatibilityLevel.ToString(),
+                HiddenTableCount = hiddenTableCount,
+                HiddenMeasureCount = hiddenMeasureCount,
+                HiddenColumnCount = hiddenColumnCount,
+                PartitionCount = partitionCount,
+                DefaultMode = model.DefaultMode.ToString(),
+                Culture = model.Culture,
+                CreatedTimestamp = database.CreatedTimestamp,
+                StructureModifiedTime = model.ModifiedTime
             };
 
             server.Disconnect();
